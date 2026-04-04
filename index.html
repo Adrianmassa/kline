@@ -202,39 +202,24 @@ select{width:118px;text-align:center;}
     <div class="section-title">技術結構判斷 A－D</div>
     <div class="input-card">
       <div class="input-row">
-        <div class="input-label">A. 價格結構<small>主體，權重最高40%</small></div>
-        <select id="structPrice">
-          <option value="good">✅ 良好</option>
-          <option value="weak">⚠️ 轉弱</option>
-          <option value="broken">🚨 破壞</option>
-          <option value="unknown" selected>— 未判斷</option>
-        </select>
+        <div class="input-label">A. 價格結構<small>系統自動判斷，權重40%</small></div>
+        <div style="font-size:11px;color:var(--accent);font-family:'DM Mono',monospace;padding:4px 0">🤖 AUTO</div>
       </div>
       <div class="input-row">
-        <div class="input-label">B. 量能條件<small>輔助，權重25%</small></div>
-        <select id="structVol">
-          <option value="good">✅ 良好</option>
-          <option value="weak">⚠️ 轉弱</option>
-          <option value="broken">🚨 破壞</option>
-          <option value="unknown" selected>— 未判斷</option>
-        </select>
+        <div class="input-label">B. 量能條件<small>系統自動判斷，權重25%</small></div>
+        <div style="font-size:11px;color:var(--accent);font-family:'DM Mono',monospace;padding:4px 0">🤖 AUTO</div>
       </div>
       <div class="input-row">
-        <div class="input-label">C. 動能條件<small>降權，系統輔助判斷20%</small></div>
-        <select id="structMom">
-          <option value="auto" selected>🤖 系統自動判斷</option>
-          <option value="good">✅ 良好</option>
-          <option value="weak">⚠️ 轉弱</option>
-          <option value="broken">🚨 破壞</option>
-        </select>
+        <div class="input-label">C. 動能條件<small>系統自動判斷，權重20%</small></div>
+        <div style="font-size:11px;color:var(--accent);font-family:'DM Mono',monospace;padding:4px 0">🤖 AUTO</div>
       </div>
       <div class="input-row">
-        <div class="input-label">D. 籌碼主力<small>確認層，權重15%</small></div>
+        <div class="input-label">D. 籌碼主力<small>唯一需手動選擇，權重15%</small></div>
         <select id="structChip">
-          <option value="good">✅ 良好</option>
-          <option value="weak">⚠️ 轉弱</option>
-          <option value="broken">🚨 破壞</option>
-          <option value="unknown" selected>— 未判斷</option>
+          <option value="unknown" selected>— 不知道</option>
+          <option value="good">✅ 大戶持續買超</option>
+          <option value="weak">⚠️ 買超停滯轉弱</option>
+          <option value="broken">🚨 大戶轉賣破位</option>
         </select>
       </div>
     </div>
@@ -305,9 +290,6 @@ function runAnalysis(){
   const vol=parseFloat(document.getElementById('volume').value);
   const volPrev=parseFloat(document.getElementById('volumePrev').value);
   const dayChg=parseFloat(document.getElementById('dayChange').value);
-  const structPrice=document.getElementById('structPrice').value;
-  const structVol=document.getElementById('structVol').value;
-  const structMom=document.getElementById('structMom').value;
   const structChip=document.getElementById('structChip').value;
   const majT=document.getElementById('majorTrend').value;
   const midT=document.getElementById('midTrend').value;
@@ -316,7 +298,7 @@ function runAnalysis(){
   const btn=document.getElementById('analyzeBtn');
   btn.disabled=true;btn.innerHTML='<span class="spinner"></span>分析中...';
   setTimeout(()=>{
-    const res=analyze({sym,tf,pr,hi,lo,cost,ma5,ma10,ma20,rsi5,rsi10,rsiPrev,dif,macd9,macdCurr,macdPrev,vol,volPrev,dayChg,majT,midT,curT,mode:tradeMode,structPrice,structVol,structMom,structChip});
+    const res=analyze({sym,tf,pr,hi,lo,cost,ma5,ma10,ma20,rsi5,rsi10,rsiPrev,dif,macd9,macdCurr,macdPrev,vol,volPrev,dayChg,majT,midT,curT,mode:tradeMode,structChip});
     renderResult(res);saveHistory(res);
     btn.disabled=false;btn.innerHTML='⚡ 開始技術分析';
     showPage('result',document.querySelectorAll('.nav-btn')[1]);
@@ -429,67 +411,120 @@ function analyze({sym,tf,pr,hi,lo,cost,ma5,ma10,ma20,rsi5,rsi10,rsiPrev,dif,macd
   risk.push({text:`嚴守止損${lo}，跌破立即出場（R4）`,type:'warn'});
   risk.push({text:'本分析為技術參考，不構成投資建議',type:''});
 
-  // ── ABCD 技術結構評分引擎 ──
-  // 權重：A=40%, B=25%, C=20%, D=15%
+  // ── ABCD 技術結構評分引擎（A/B/C 全自動，D 手動）──
   function structScore(val){ return val==='good'?100:val==='weak'?40:val==='broken'?0:50; }
+  const sLabel = {good:'良好',weak:'轉弱',broken:'破壞',unknown:'數據不足'};
 
-  // C. 動能：系統自動判斷
-  let autoMom = 'good';
-  let momEvidence = [];
-  // MACD判斷
-  if(!isNaN(dif)&&!isNaN(macd9)){
-    if(dif>0&&dif>macd9){ momEvidence.push('MACD多方'); }
-    else if(dif<0&&dif<macd9){ momEvidence.push('MACD空方'); autoMom='weak'; }
-  }
-  if(!isNaN(macdCurr)&&!isNaN(macdPrev)){
-    const acc=macdCurr-macdPrev;
-    if(macdCurr<0&&macdPrev<0&&acc<0){ autoMom='broken'; momEvidence.push('動能加速轉負'); }
-    else if(acc<0&&macdCurr>0){ if(autoMom==='good') autoMom='weak'; momEvidence.push('動能開始衰減'); }
-    else if(acc>0){ momEvidence.push('動能加速'); }
-  }
-  // RSI判斷
-  if(!isNaN(rsi5)){
-    if(rsi5<40){ if(autoMom==='good') autoMom='weak'; momEvidence.push(`RSI=${rsi5}跌破中軸`); }
-    if(rsi5<30&&!isNaN(rsiPrev)&&rsiPrev>rsi5){ autoMom='broken'; momEvidence.push('RSI破位無反彈'); }
-    if(rsi5>=50) momEvidence.push(`RSI=${rsi5}守中軸`);
-  }
-  const finalMom = structMom==='auto' ? autoMom : structMom;
-  const momAutoLabel = structMom==='auto' ? `（自動：${momEvidence.length?momEvidence.join('、'):'數據不足'}）` : '';
+  // ── A. 價格結構 自動判斷（權重40%）──
+  let autoPrice='good'; const priceEvidence=[];
+  const hasPriceData = !isNaN(pr)&&!isNaN(hi)&&!isNaN(lo);
+  if(hasPriceData){
+    const retrace=(hi-pr)/(hi-lo); // 從高點回撤幅度
+    // 現價距高點回撤
+    if(retrace>0.618){ autoPrice='broken'; priceEvidence.push(`從高點回撤${(retrace*100).toFixed(0)}%，跌破61.8%`); }
+    else if(retrace>0.382){ autoPrice='weak'; priceEvidence.push(`從高點回撤${(retrace*100).toFixed(0)}%，進入38-62%區間`); }
+    else{ priceEvidence.push(`從高點回撤僅${(retrace*100).toFixed(0)}%，結構完整`); }
+    // MA位置
+    if(!isNaN(ma5)&&!isNaN(ma10)&&!isNaN(ma20)){
+      if(pr>ma5&&pr>ma10&&pr>ma20){ priceEvidence.push('站上所有均線'); }
+      else if(pr<ma5&&pr<ma10&&pr<ma20){ if(autoPrice==='good') autoPrice='broken'; priceEvidence.push('跌破所有均線'); }
+      else if(pr<ma20){ if(autoPrice==='good') autoPrice='weak'; priceEvidence.push('跌破MA20'); }
+      else{ priceEvidence.push('均線位置混雜'); if(autoPrice==='good') autoPrice='weak'; }
+    }
+    // 趨勢一致性
+    if(curT==='down'||majT==='down'){ if(autoPrice==='good') autoPrice='weak'; priceEvidence.push('大/現週期向下'); }
+    if(curT==='up'&&midT==='up'){ priceEvidence.push('中現週期同步向上'); }
+    if(curT==='up'&&majT==='down'&&midT!=='up'){ if(autoPrice==='good') autoPrice='weak'; priceEvidence.push('反彈但大週期仍空'); }
+  } else { autoPrice='unknown'; priceEvidence.push('數據不足，請填入現價/高低點/均線'); }
 
-  // 計算加權分數
-  const scoreA = structPrice==='unknown' ? null : structScore(structPrice);
-  const scoreB = structVol==='unknown' ? null : structScore(structVol);
-  const scoreC = structScore(finalMom);
+  // ── B. 量能條件 自動判斷（權重25%）──
+  let autoVol='good'; const volEvidence=[];
+  const hasVolData=!isNaN(vol)&&!isNaN(volPrev)&&volPrev>0;
+  if(hasVolData){
+    const vr=vol/volPrev;
+    // 量能比值判斷
+    if(vr>=1.8){
+      // 爆量需看方向
+      if(curT==='down'||curT==='down-slow'){ autoVol='broken'; volEvidence.push(`爆量${vr.toFixed(1)}倍配合下跌，破壞訊號`); }
+      else{ volEvidence.push(`放量${vr.toFixed(1)}倍配合上漲，量能充足`); }
+    } else if(vr>1.2){
+      if(curT==='up'||curT==='up-slow'){ volEvidence.push(`溫和放量+${((vr-1)*100).toFixed(0)}%，上漲有量`); }
+      else{ if(autoVol==='good') autoVol='weak'; volEvidence.push(`放量但方向向下，需注意`); }
+    } else if(vr<0.5){
+      if(curT==='up'||curT==='up-slow'){ autoVol='weak'; volEvidence.push(`成交量萎縮至前期${(vr*100).toFixed(0)}%，上漲無量`); }
+      else{ volEvidence.push(`縮量回檔${(vr*100).toFixed(0)}%，正常整理`); }
+    } else {
+      volEvidence.push(`成交量持平（${(vr*100).toFixed(0)}%），無異常`);
+    }
+    // 爆量黑K判斷
+    if(!isNaN(dayChg)&&dayChg<-3&&vr>=1.5){ autoVol='broken'; volEvidence.push(`大跌${dayChg}%+爆量，賣壓沉重`); }
+  } else if(!isNaN(vol)){
+    if(vol<10){ autoVol='weak'; volEvidence.push(`成交量極度萎縮(${vol}M)，缺乏動能`); }
+    else volEvidence.push(`成交量${vol}M（無前期基準比較）`);
+  } else { autoVol='unknown'; volEvidence.push('未填成交量，無法判斷'); }
+
+  // ── C. 動能條件 自動判斷（權重20%）──
+  let autoMom='good'; const momEvidence=[];
+  const hasMacdData=!isNaN(dif)&&!isNaN(macd9);
+  const hasRsiData=!isNaN(rsi5);
+  if(hasMacdData||hasRsiData){
+    if(hasMacdData){
+      if(dif>0&&dif>macd9){ momEvidence.push('MACD金叉零軸上'); }
+      else if(dif>0&&dif<macd9){ if(autoMom==='good') autoMom='weak'; momEvidence.push('MACD零軸上但死叉'); }
+      else if(dif<0&&dif>macd9){ if(autoMom==='good') autoMom='weak'; momEvidence.push('MACD零軸下金叉'); }
+      else{ autoMom='broken'; momEvidence.push('MACD死叉零軸下'); }
+    }
+    if(!isNaN(macdCurr)&&!isNaN(macdPrev)){
+      const acc=macdCurr-macdPrev;
+      if(acc>0&&macdCurr>0){ momEvidence.push('柱體加速擴大'); }
+      else if(acc>0&&macdCurr<0){ momEvidence.push('負柱縮小，動能轉好'); }
+      else if(acc<0&&macdCurr>0){ if(autoMom==='good') autoMom='weak'; momEvidence.push('正柱縮小，動能衰減'); }
+      else if(acc<0&&macdCurr<0){ if(autoMom!=='broken') autoMom='broken'; momEvidence.push('負柱加速，空方加速'); }
+    }
+    if(hasRsiData){
+      if(rsi5>=50){ momEvidence.push(`RSI=${rsi5}守中軸`); }
+      else if(rsi5>=40){ if(autoMom==='good') autoMom='weak'; momEvidence.push(`RSI=${rsi5}接近中軸`); }
+      else{ if(autoMom==='good') autoMom='weak'; momEvidence.push(`RSI=${rsi5}跌破中軸`); }
+      if(rsi5<30&&!isNaN(rsiPrev)&&rsiPrev>rsi5+5){ autoMom='broken'; momEvidence.push('RSI持續下滑無反彈'); }
+    }
+  } else { autoMom='unknown'; momEvidence.push('未填MACD/RSI，無法判斷'); }
+
+  // ── 計算加權總分 ──
+  const scoreA = autoPrice==='unknown' ? null : structScore(autoPrice);
+  const scoreB = autoVol==='unknown' ? null : structScore(autoVol);
+  const scoreC = autoMom==='unknown' ? null : structScore(autoMom);
   const scoreD = structChip==='unknown' ? null : structScore(structChip);
 
-  // 加權平均（未填項目重新分配權重）
-  let totalWeight = 0, totalScore = 0;
+  let totalWeight=0, totalScore=0;
   if(scoreA!==null){ totalScore+=scoreA*40; totalWeight+=40; }
   if(scoreB!==null){ totalScore+=scoreB*25; totalWeight+=25; }
-  totalScore+=scoreC*20; totalWeight+=20;
+  if(scoreC!==null){ totalScore+=scoreC*20; totalWeight+=20; }
   if(scoreD!==null){ totalScore+=scoreD*15; totalWeight+=15; }
   const structFinalScore = totalWeight>0 ? Math.round(totalScore/totalWeight) : 50;
 
-  // 綜合結構判定
+  // ── 綜合結構判定 ──
   let structVerdict, structVerdictText, structVerdictClass, structVerdictDesc;
-  if(structFinalScore>=70){
-    structVerdict='良好 INTACT';structVerdictText='✅ 結構良好';structVerdictClass='good';
-    structVerdictDesc='價格結構完整，高低點墊高，量能配合，動能支撐。可依系統規則持有或建倉。';
+  // 如果A（價格結構）為破壞，直接覆蓋為破壞（主體最高權重）
+  if(autoPrice==='broken'){
+    structVerdict='破壞 BROKEN'; structVerdictText='🚨 結構破壞'; structVerdictClass='broken';
+    structVerdictDesc='價格結構已破壞（主體條件），R4強制規則應啟動。大幅降低部位或全出，等待重新建立結構後再評估。';
+  } else if(structFinalScore>=70){
+    structVerdict='良好 INTACT'; structVerdictText='✅ 結構良好'; structVerdictClass='good';
+    structVerdictDesc='四個維度整體健康，可依系統規則持有或建倉。注意持續監控是否有轉弱訊號。';
   } else if(structFinalScore>=40){
-    structVerdict='轉弱 WEAKENING';structVerdictText='⚠️ 結構轉弱';structVerdictClass='weak';
-    structVerdictDesc='部分條件出現惡化，尚未完全破壞。應降低部位，提高出場敏感度，禁止加碼。';
+    structVerdict='轉弱 WEAKENING'; structVerdictText='⚠️ 結構轉弱'; structVerdictClass='weak';
+    structVerdictDesc='部分條件出現惡化，尚未完全破壞。應降低部位，提高出場敏感度，禁止加碼（H3規則）。';
   } else {
-    structVerdict='破壞 BROKEN';structVerdictText='🚨 結構破壞';structVerdictClass='broken';
-    structVerdictDesc='關鍵結構已破壞，R4強制規則應啟動。大幅降低部位或全出，等待重新建立結構。';
+    structVerdict='破壞 BROKEN'; structVerdictText='🚨 結構破壞'; structVerdictClass='broken';
+    structVerdictDesc='多個維度同步惡化，R4強制規則啟動。大幅降低部位或全出，等待結構重新建立。';
   }
 
-  // 各維度描述
-  const structDetails = [];
-  const sLabel = {good:'良好',weak:'轉弱',broken:'破壞',unknown:'未判斷'};
-  structDetails.push({ dim:'A. 價格結構', val:structPrice, score:scoreA, weight:40, label:sLabel[structPrice]||sLabel[structPrice] });
-  structDetails.push({ dim:'B. 量能條件', val:structVol, score:scoreB, weight:25, label:sLabel[structVol]||sLabel[structVol] });
-  structDetails.push({ dim:'C. 動能條件', val:finalMom, score:scoreC, weight:20, label:(sLabel[finalMom]||finalMom)+momAutoLabel });
-  structDetails.push({ dim:'D. 籌碼主力', val:structChip, score:scoreD, weight:15, label:sLabel[structChip]||sLabel[structChip] });
+  const structDetails=[
+    {dim:'A. 價格結構',val:autoPrice,score:scoreA,weight:40,label:(sLabel[autoPrice]||autoPrice),evidence:priceEvidence},
+    {dim:'B. 量能條件',val:autoVol,score:scoreB,weight:25,label:(sLabel[autoVol]||autoVol),evidence:volEvidence},
+    {dim:'C. 動能條件',val:autoMom,score:scoreC,weight:20,label:(sLabel[autoMom]||autoMom),evidence:momEvidence},
+    {dim:'D. 籌碼主力',val:structChip,score:scoreD,weight:15,label:(sLabel[structChip]||structChip),evidence:structChip==='unknown'?['未填入，不計入評分']:structChip==='good'?['大戶持續買超，籌碼健康']:structChip==='weak'?['大戶買超停滯，注意籌碼']:['大戶轉賣破位，籌碼惡化']},
+  ];
 
   const ctx=tfc(tf);
   const tl={down:'下跌','down-slow':'緩跌',sideways:'橫盤','up-slow':'緩升',up:'上漲'};
@@ -519,12 +554,14 @@ function renderResult(d){
       <div style="font-size:12px;color:var(--text);line-height:1.6;margin-bottom:10px">${d.structVerdictDesc}</div>
       <div class="struct-bars">
         ${d.structDetails.map(s=>{
-          const col=s.val==='good'||s.val==='良好'?'var(--green)':s.val==='weak'||s.val==='轉弱'?'var(--gold)':s.val==='broken'||s.val==='破壞'?'var(--red)':'var(--muted)';
+          const col=s.val==='good'?'var(--green)':s.val==='weak'?'var(--gold)':s.val==='broken'?'var(--red)':'var(--muted)';
           const pct=s.score!==null?s.score:50;
+          const evHTML=s.evidence&&s.evidence.length?`<div style="font-size:10px;color:var(--muted);margin-top:3px;line-height:1.5">${s.evidence.slice(0,2).join('、')}</div>`:'';
           return `<div class="struct-bar-item">
             <div class="struct-bar-label">${s.dim} <span style="opacity:0.6">${s.weight}%</span></div>
             <div class="struct-bar-track"><div class="struct-bar-fill" style="width:${pct}%;background:${col}"></div></div>
             <div class="struct-bar-status" style="color:${col}">${s.label}</div>
+            ${evHTML}
           </div>`;
         }).join('')}
       </div>
