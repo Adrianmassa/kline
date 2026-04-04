@@ -540,6 +540,36 @@ padding: 10px 12px;
   </div>
 
   <div class="section">
+    <div class="section-title">動能分析（微積分）</div>
+    <div class="input-card">
+      <div class="input-row">
+        <div class="input-label">前一根MACD柱<small>上一期OSC值</small></div>
+        <input type="number" id="macdPrev" placeholder="-0.20" step="0.001">
+      </div>
+      <div class="input-row">
+        <div class="input-label">現在MACD柱<small>本期OSC值</small></div>
+        <input type="number" id="macdCurr" placeholder="0.10" step="0.001">
+      </div>
+      <div class="input-row">
+        <div class="input-label">前一期RSI<small>上期RSI值</small></div>
+        <input type="number" id="rsiPrev" placeholder="55" step="0.1" min="0" max="100">
+      </div>
+      <div class="input-row">
+        <div class="input-label">現在RSI<small>本期RSI值</small></div>
+        <input type="number" id="rsiCurr" placeholder="65" step="0.1" min="0" max="100">
+      </div>
+      <div class="input-row">
+        <div class="input-label">成交量<small>選填，單位M</small></div>
+        <input type="number" id="volume" placeholder="8.99" step="0.01">
+      </div>
+      <div class="input-row">
+        <div class="input-label">前期成交量<small>選填，比較用</small></div>
+        <input type="number" id="volumePrev" placeholder="444" step="0.01">
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
     <div class="section-title">K線圖上傳（選填，輔助判斷）</div>
     <div class="upload-area" id="uploadArea">
       <input type="file" accept="image/*" multiple onchange="handleImages(this)">
@@ -687,6 +717,12 @@ function runAnalysis() {
   const rsi10 = parseFloat(document.getElementById('rsi10').value);
   const dif = parseFloat(document.getElementById('dif').value);
   const macd9 = parseFloat(document.getElementById('macd9').value);
+  const macdPrev = parseFloat(document.getElementById('macdPrev').value);
+  const macdCurr = parseFloat(document.getElementById('macdCurr').value);
+  const rsiPrev = parseFloat(document.getElementById('rsiPrev').value);
+  const rsiCurr = parseFloat(document.getElementById('rsiCurr').value);
+  const volume = parseFloat(document.getElementById('volume').value);
+  const volumePrev = parseFloat(document.getElementById('volumePrev').value);
   const mTrend = document.getElementById('monthlyTrend').value;
   const wTrend = document.getElementById('weeklyTrend').value;
   const dTrend = document.getElementById('dailyTrend').value;
@@ -701,7 +737,7 @@ function runAnalysis() {
   btn.innerHTML = '<span class="spinner"></span>分析中...';
 
   setTimeout(() => {
-    const result = analyze({ symbol, price, high, low, ma5, ma10, ma20, rsi5, rsi10, dif, macd9, mTrend, wTrend, dTrend });
+    const result = analyze({ symbol, price, high, low, ma5, ma10, ma20, rsi5, rsi10, dif, macd9, mTrend, wTrend, dTrend, macdPrev, macdCurr, rsiPrev, rsiCurr, volume, volumePrev });
     renderResult(result);
     saveHistory(result);
     btn.disabled = false;
@@ -803,6 +839,67 @@ function analyze(d) {
     if (Math.abs(osc) < 0.1 * Math.abs(dif || 1)) macdAnalysis.push('DIF與Signal接近，即將產生交叉訊號，注意方向確認');
   }
 
+  // ── Momentum Analysis (Calculus) ──
+  const momentumAnalysis = [];
+  const hasMomentum = !isNaN(macdPrev) && !isNaN(macdCurr);
+  const hasRsiMomentum = !isNaN(rsiPrev) && !isNaN(rsiCurr);
+
+  if (hasMomentum) {
+    const macdAccel = macdCurr - macdPrev; // 二階導數：MACD柱加速度
+    const macdVel = macdCurr; // 一階導數：現在動能方向
+
+    if (macdCurr > 0 && macdPrev < 0) {
+      momentumAnalysis.push('MACD柱狀圖由負轉正（零軸交叉），動能發生質變，多方力量開始主導');
+    } else if (macdCurr < 0 && macdPrev > 0) {
+      momentumAnalysis.push('MACD柱狀圖由正轉負（零軸交叉），動能反轉，空方力量開始主導');
+    }
+
+    if (macdAccel > 0 && macdCurr > 0) {
+      momentumAnalysis.push(`MACD柱加速擴大（+${macdAccel.toFixed(3)}），多方動能持續加速，上攻力道增強`);
+    } else if (macdAccel > 0 && macdCurr < 0) {
+      momentumAnalysis.push(`MACD柱縮小中（+${macdAccel.toFixed(3)}），空方動能衰減，下跌速度放緩，底部訊號增強`);
+    } else if (macdAccel < 0 && macdCurr > 0) {
+      momentumAnalysis.push(`MACD柱開始縮小（${macdAccel.toFixed(3)}），多方動能衰減，注意高位轉折風險`);
+    } else if (macdAccel < 0 && macdCurr < 0) {
+      momentumAnalysis.push(`MACD柱持續擴大（${macdAccel.toFixed(3)}），空方動能加速，下跌趨勢強化`);
+    }
+
+    // 加速度強弱評級
+    const accelAbs = Math.abs(macdAccel);
+    if (accelAbs > 0.5) momentumAnalysis.push(`動能加速度極強（Δ=${macdAccel.toFixed(3)}），趨勢轉折力道明顯`);
+    else if (accelAbs > 0.1) momentumAnalysis.push(`動能加速度中等（Δ=${macdAccel.toFixed(3)}），趨勢轉變溫和進行中`);
+    else momentumAnalysis.push(`動能加速度微弱（Δ=${macdAccel.toFixed(3)}），趨勢轉變緩慢，需持續觀察`);
+  }
+
+  if (hasRsiMomentum) {
+    const rsiDelta = rsiCurr - rsiPrev; // RSI一階導數
+    if (rsiDelta > 10) momentumAnalysis.push(`RSI急速上升（+${rsiDelta.toFixed(1)}），短線動能爆發，注意超買風險`);
+    else if (rsiDelta > 3) momentumAnalysis.push(`RSI持續上升（+${rsiDelta.toFixed(1)}），多方動能穩定增強`);
+    else if (rsiDelta > 0) momentumAnalysis.push(`RSI小幅上升（+${rsiDelta.toFixed(1)}），多方動能微弱回升`);
+    else if (rsiDelta < -10) momentumAnalysis.push(`RSI急速下滑（${rsiDelta.toFixed(1)}），空方動能爆發，注意超賣反彈`);
+    else if (rsiDelta < -3) momentumAnalysis.push(`RSI持續下滑（${rsiDelta.toFixed(1)}），空方動能增強`);
+    else momentumAnalysis.push(`RSI變化微小（${rsiDelta.toFixed(1)}），動能方向不明，整理中`);
+
+    // RSI背離判斷
+    if (rsiCurr > 70 && rsiDelta < 0) momentumAnalysis.push('RSI高位鈍化且開始下滑，頂部背離訊號，注意多頭陷阱');
+    if (rsiCurr < 30 && rsiDelta > 0) momentumAnalysis.push('RSI低位鈍化且開始回升，底部背離訊號，反彈機率增加');
+  }
+
+  // 成交量動能
+  const volAnalysis = [];
+  if (!isNaN(volume)) {
+    if (!isNaN(volumePrev) && volumePrev > 0) {
+      const volRatio = volume / volumePrev;
+      if (volRatio > 2) volAnalysis.push(`成交量暴增（${(volRatio).toFixed(1)}倍），動能確認，方向性明確`);
+      else if (volRatio > 1.3) volAnalysis.push(`成交量溫和放大（+${((volRatio-1)*100).toFixed(0)}%），動能略有支撐`);
+      else if (volRatio < 0.5) volAnalysis.push(`成交量大幅萎縮（僅前期${(volRatio*100).toFixed(0)}%），動能嚴重不足，反彈可信度低`);
+      else if (volRatio < 0.8) volAnalysis.push(`成交量縮小（前期${(volRatio*100).toFixed(0)}%），動能偏弱，需放量確認`);
+      else volAnalysis.push(`成交量持平，動能無明顯變化`);
+    } else {
+      volAnalysis.push(`成交量 ${volume}M，${volume < 10 ? '量能極度萎縮，反彈力道存疑' : volume < 50 ? '量能偏低' : volume > 200 ? '量能充足，動能支撐強' : '量能正常'}`);
+    }
+  }
+
   // ── Trend Multi-frame ──
   const tScores = [trendScore(mTrend), trendScore(wTrend), trendScore(dTrend)];
   const avgScore = tScores.reduce((a, b) => a + b, 0) / 3;
@@ -889,8 +986,10 @@ function analyze(d) {
   return {
     symbol, price, high, low, bias, biasScore,
     fib, srLevels, maAnalysis, rsiAnalysis, macdAnalysis,
+    momentumAnalysis, volAnalysis,
     patterns, waveHints, signals, risk, summary,
     mTrend, wTrend, dTrend, rsi5, rsi10, dif, macd9, ma5, ma10, ma20,
+    macdPrev, macdCurr, rsiPrev, rsiCurr, volume, volumePrev,
     timestamp: new Date().toLocaleString('zh-TW')
   };
 }
@@ -975,6 +1074,17 @@ function renderResult(d) {
         <div class="rcard-body">
           <div class="ind-grid">${indBoxes}</div>
           ${bullets([...d.maAnalysis, ...d.rsiAnalysis, ...d.macdAnalysis])}
+        </div>
+      </div>
+
+      <div class="rcard open" id="rc-momentum">
+        <div class="rcard-header" onclick="toggleRcard('rc-momentum')">
+          <span class="rcard-icon">⚡</span>
+          <span class="rcard-title">微積分動能分析</span>
+          <span class="rcard-chevron">▼</span>
+        </div>
+        <div class="rcard-body">
+          ${d.momentumAnalysis && d.momentumAnalysis.length ? bullets([...d.momentumAnalysis, ...d.volAnalysis]) : '<div class="bullet" style="color:var(--muted)">請填入前期／本期MACD柱及RSI數值以啟用動能分析</div>'}
         </div>
       </div>
 
