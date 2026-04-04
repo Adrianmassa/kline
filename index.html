@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="K線分析">
+<meta name="theme-color" content="#0a0f1a">
+<title>K線技術分析</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@300;400;500;700&display=swap');
+
+:root {
+–bg: #0a0f1a;
+–card: #111827;
+–card2: #1a2235;
+–border: #1e2d45;
+–accent: #38bdf8;
+–gold: #f59e0b;
+–green: #22c55e;
+–red: #ef4444;
+–text: #e2e8f0;
+–muted: #64748b;
+–safe: 44px;
+}
+
+- { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+html, body {
+background: var(–bg);
+color: var(–text);
+font-family: ‘Noto Sans TC’, sans-serif;
+min-height: 100vh;
+overflow-x: hidden;
+}
+
+/* Noise texture */
+body::after {
+content: ‘’;
+position: fixed;
+inset: 0;
+background-image: url(“data:image/svg+xml,%3Csvg viewBox=‘0 0 256 256’ xmlns=‘http://www.w3.org/2000/svg’%3E%3Cfilter id=‘noise’%3E%3CfeTurbulence type=‘fractalNoise’ baseFrequency=‘0.9’ numOctaves=‘4’ stitchTiles=‘stitch’/%3E%3C/filter%3E%3Crect width=‘100%25’ height=‘100%25’ filter=‘url(%23noise)’ opacity=‘0.03’/%3E%3C/svg%3E”);
+pointer-events: none;
+z-index: 999;
+opacity: 0.4;
+}
+
+/* ── Header ── */
+.header {
+position: sticky;
+top: 0;
+z-index: 100;
+background: rgba(10,15,26,0.92);
+backdrop-filter: blur(16px);
+-webkit-backdrop-filter: blur(16px);
+border-bottom: 1px solid var(–border);
+padding: 16px 20px 12px;
+padding-top: calc(var(–safe) + 4px);
+display: flex;
+align-items: center;
+gap: 10px;
+}
+
+.header-icon {
+width: 32px; height: 32px;
+background: linear-gradient(135deg, var(–accent), #0ea5e9);
+border-radius: 8px;
+display: flex; align-items: center; justify-content: center;
+font-size: 16px; flex-shrink: 0;
+}
+
+.header-title {
+font-size: 17px;
+font-weight: 700;
+letter-spacing: 0.3px;
+flex: 1;
+}
+
+.header-sub {
+font-size: 10px;
+color: var(–muted);
+font-family: ‘DM Mono’, monospace;
+letter-spacing: 1px;
+}
+
+/* ── Pages ── */
+.page { display: none; padding: 0 0 100px; }
+.page.active { display: block; }
+
+/* ── Bottom Nav ── */
+.bottom-nav {
+position: fixed;
+bottom: 0; left: 0; right: 0;
+z-index: 100;
+background: rgba(10,15,26,0.96);
+backdrop-filter: blur(16px);
+-webkit-backdrop-filter: blur(16px);
+border-top: 1px solid var(–border);
+display: flex;
+padding-bottom: env(safe-area-inset-bottom, 16px);
+}
+
+.nav-btn {
+flex: 1;
+display: flex;
+flex-direction: column;
+align-items: center;
+gap: 3px;
+padding: 10px 0;
+background: none;
+border: none;
+color: var(–muted);
+font-size: 10px;
+font-family: ‘Noto Sans TC’, sans-serif;
+cursor: pointer;
+transition: color 0.2s;
+}
+
+.nav-btn.active { color: var(–accent); }
+.nav-btn .nav-icon { font-size: 20px; }
+
+/* ── Section ── */
+.section {
+padding: 20px 16px 0;
+}
+
+.section-title {
+font-size: 11px;
+font-family: ‘DM Mono’, monospace;
+color: var(–muted);
+letter-spacing: 2px;
+text-transform: uppercase;
+margin-bottom: 10px;
+}
+
+/* ── Input Card ── */
+.input-card {
+background: var(–card);
+border: 1px solid var(–border);
+border-radius: 14px;
+overflow: hidden;
+margin-bottom: 14px;
+}
+
+.input-row {
+display: flex;
+align-items: center;
+padding: 14px 16px;
+border-bottom: 1px solid var(–border);
+gap: 10px;
+}
+
+.input-row:last-child { border-bottom: none; }
+
+.input-label {
+font-size: 14px;
+color: var(–text);
+flex: 1;
+}
+
+.input-label small {
+display: block;
+font-size: 11px;
+color: var(–muted);
+margin-top: 1px;
+}
+
+input[type=text], input[type=number], select {
+background: var(–card2);
+border: 1px solid var(–border);
+color: var(–text);
+border-radius: 8px;
+padding: 8px 10px;
+font-size: 14px;
+font-family: ‘DM Mono’, monospace;
+outline: none;
+width: 130px;
+text-align: right;
+}
+
+input[type=number] { width: 90px; }
+select { width: 120px; text-align: center; }
+
+/* ── Upload Area ── */
+.upload-area {
+background: var(–card);
+border: 1.5px dashed var(–border);
+border-radius: 14px;
+padding: 20px;
+text-align: center;
+cursor: pointer;
+transition: all 0.2s;
+margin-bottom: 14px;
+position: relative;
+}
+
+.upload-area.has-files {
+border-style: solid;
+border-color: var(–accent);
+background: rgba(56,189,248,0.04);
+}
+
+.upload-area input[type=file] {
+position: absolute;
+inset: 0;
+opacity: 0;
+width: 100%;
+height: 100%;
+cursor: pointer;
+}
+
+.upload-icon { font-size: 32px; margin-bottom: 8px; }
+.upload-title { font-size: 15px; font-weight: 500; margin-bottom: 4px; }
+.upload-hint { font-size: 12px; color: var(–muted); }
+
+.preview-grid {
+display: grid;
+grid-template-columns: repeat(3, 1fr);
+gap: 8px;
+margin-top: 12px;
+}
+
+.preview-item {
+position: relative;
+aspect-ratio: 1;
+border-radius: 8px;
+overflow: hidden;
+background: var(–card2);
+}
+
+.preview-item img {
+width: 100%; height: 100%;
+object-fit: cover;
+}
+
+.preview-label {
+position: absolute;
+bottom: 0; left: 0; right: 0;
+background: rgba(0,0,0,0.6);
+font-size: 10px;
+font-family: ‘DM Mono’, monospace;
+color: var(–accent);
+padding: 3px 5px;
+text-align: center;
+}
+
+/* ── Analyze Button ── */
+.analyze-btn {
+width: 100%;
+padding: 16px;
+background: linear-gradient(135deg, var(–accent), #0ea5e9);
+color: #0a0f1a;
+border: none;
+border-radius: 14px;
+font-size: 15px;
+font-weight: 700;
+font-family: ‘Noto Sans TC’, sans-serif;
+letter-spacing: 1px;
+cursor: pointer;
+transition: all 0.2s;
+margin-top: 4px;
+}
+
+.analyze-btn:active { transform: scale(0.98); opacity: 0.9; }
+.analyze-btn:disabled { opacity: 0.4; }
+
+/* ── Result Cards ── */
+.result-header {
+padding: 20px 16px 12px;
+display: flex;
+align-items: center;
+gap: 10px;
+}
+
+.ticker {
+font-family: ‘DM Mono’, monospace;
+font-size: 22px;
+font-weight: 500;
+color: var(–text);
+}
+
+.bias-badge {
+padding: 4px 12px;
+border-radius: 20px;
+font-size: 12px;
+font-weight: 700;
+font-family: ‘DM Mono’, monospace;
+letter-spacing: 1px;
+}
+
+.bias-bull { background: rgba(34,197,94,0.15); color: var(–green); border: 1px solid rgba(34,197,94,0.3); }
+.bias-bear { background: rgba(239,68,68,0.15); color: var(–red); border: 1px solid rgba(239,68,68,0.3); }
+.bias-neutral { background: rgba(245,158,11,0.15); color: var(–gold); border: 1px solid rgba(245,158,11,0.3); }
+
+.score-bar-wrap {
+margin: 0 16px 14px;
+background: var(–card);
+border: 1px solid var(–border);
+border-radius: 12px;
+padding: 14px;
+}
+
+.score-row {
+display: flex;
+justify-content: space-between;
+align-items: center;
+margin-bottom: 8px;
+}
+
+.score-label { font-size: 11px; color: var(–muted); font-family: ‘DM Mono’, monospace; }
+.score-val { font-size: 13px; font-family: ‘DM Mono’, monospace; }
+
+.bar-track {
+height: 6px;
+background: var(–card2);
+border-radius: 3px;
+overflow: hidden;
+}
+
+.bar-fill {
+height: 100%;
+border-radius: 3px;
+transition: width 1s cubic-bezier(.4,0,.2,1);
+}
+
+.rcard {
+margin: 0 16px 12px;
+background: var(–card);
+border: 1px solid var(–border);
+border-radius: 14px;
+overflow: hidden;
+}
+
+.rcard-header {
+display: flex;
+align-items: center;
+gap: 8px;
+padding: 13px 16px;
+cursor: pointer;
+user-select: none;
+}
+
+.rcard-icon { font-size: 16px; }
+.rcard-title { font-size: 13px; font-weight: 600; flex: 1; letter-spacing: 0.3px; }
+.rcard-chevron { color: var(–muted); font-size: 12px; transition: transform 0.2s; }
+.rcard.open .rcard-chevron { transform: rotate(180deg); }
+
+.rcard-body { display: none; padding: 0 16px 14px; border-top: 1px solid var(–border); }
+.rcard.open .rcard-body { display: block; }
+
+.bullet { display: flex; gap: 8px; font-size: 13px; line-height: 1.65; color: var(–text); margin-top: 10px; }
+.bullet::before { content: ‘▸’; color: var(–accent); font-size: 10px; margin-top: 4px; flex-shrink: 0; }
+
+.level-item {
+display: flex;
+align-items: center;
+gap: 8px;
+padding: 9px 0;
+border-bottom: 1px solid var(–border);
+font-size: 13px;
+}
+
+.level-item:last-child { border-bottom: none; }
+
+.dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.dot-r { background: var(–red); }
+.dot-s { background: var(–green); }
+
+.price { font-family: ‘DM Mono’, monospace; font-size: 13px; color: var(–accent); margin-left: auto; }
+.strength { font-size: 10px; color: var(–muted); font-family: ‘DM Mono’, monospace; }
+
+.summary-box {
+background: rgba(56,189,248,0.05);
+border: 1px solid rgba(56,189,248,0.15);
+border-radius: 10px;
+padding: 14px;
+font-size: 13px;
+line-height: 1.75;
+margin-top: 10px;
+}
+
+/* ── History Page ── */
+.history-item {
+background: var(–card);
+border: 1px solid var(–border);
+border-radius: 14px;
+padding: 14px 16px;
+margin-bottom: 10px;
+display: flex;
+align-items: center;
+gap: 12px;
+cursor: pointer;
+}
+
+.hist-ticker { font-family: ‘DM Mono’, monospace; font-size: 15px; font-weight: 500; flex: 1; }
+.hist-date { font-size: 11px; color: var(–muted); font-family: ‘DM Mono’, monospace; }
+.hist-arrow { color: var(–muted); }
+
+.empty-state {
+text-align: center;
+padding: 60px 20px;
+color: var(–muted);
+}
+
+.empty-icon { font-size: 48px; margin-bottom: 12px; }
+.empty-text { font-size: 14px; }
+
+/* ── Toast ── */
+.toast {
+position: fixed;
+top: 80px; left: 50%; transform: translateX(-50%) translateY(-20px);
+background: var(–card2);
+border: 1px solid var(–border);
+border-radius: 10px;
+padding: 10px 20px;
+font-size: 13px;
+z-index: 500;
+opacity: 0;
+transition: all 0.3s;
+white-space: nowrap;
+}
+
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ── Spinner ── */
+@keyframes spin { to { transform: rotate(360deg); } }
+.spinner {
+display: inline-block;
+width: 16px; height: 16px;
+border: 2px solid rgba(10,15,26,0.3);
+border-top-color: #0a0f1a;
+border-radius: 50%;
+animation: spin 0.7s linear infinite;
+vertical-align: middle;
+margin-right: 6px;
+}
+
+@keyframes fadeUp {
+from { opacity: 0; transform: translateY(16px); }
+to { opacity: 1; transform: translateY(0); }
+}
+.fade-up { animation: fadeUp 0.4s ease forwards; }
+
+/* Indicator grid */
+.ind-grid {
+display: grid;
+grid-template-columns: 1fr 1fr;
+gap: 8px;
+margin-top: 10px;
+}
+
+.ind-box {
+background: var(–card2);
+border-radius: 10px;
+padding: 10px 12px;
+}
+
+.ind-name { font-size: 10px; color: var(–muted); font-family: ‘DM Mono’, monospace; margin-bottom: 4px; }
+.ind-val { font-size: 14px; font-weight: 600; font-family: ‘DM Mono’, monospace; }
+.ind-signal { font-size: 11px; margin-top: 2px; }
+</style>
+
+</head>
+<body>
+
+<!-- Header -->
+
+<div class="header">
+  <div class="header-icon">📈</div>
+  <div>
+    <div class="header-title">K線技術分析</div>
+    <div class="header-sub">OFFLINE · FREE · PWA</div>
+  </div>
+</div>
+
+<!-- Toast -->
+
+<div class="toast" id="toast"></div>
+
+<!-- ══════════════ PAGE: 分析 ══════════════ -->
+
+<div class="page active" id="page-analyze">
+
+  <div class="section">
+    <div class="section-title">股票資訊</div>
+    <div class="input-card">
+      <div class="input-row">
+        <div class="input-label">股票名稱／代號<small>e.g. 正新 / 2105</small></div>
+        <input type="text" id="symbol" placeholder="正新" value="">
+      </div>
+      <div class="input-row">
+        <div class="input-label">現價<small>目前股價</small></div>
+        <input type="number" id="price" placeholder="31.55" step="0.01">
+      </div>
+      <div class="input-row">
+        <div class="input-label">近期高點<small>可見範圍最高</small></div>
+        <input type="number" id="high" placeholder="62.00" step="0.01">
+      </div>
+      <div class="input-row">
+        <div class="input-label">近期低點<small>可見範圍最低</small></div>
+        <input type="number" id="low" placeholder="28.10" step="0.01">
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">技術指標數值</div>
+    <div class="input-card">
+      <div class="input-row">
+        <div class="input-label">MA5<small>5日均線</small></div>
+        <input type="number" id="ma5" placeholder="31.35" step="0.01">
+      </div>
+      <div class="input-row">
+        <div class="input-label">MA10<small>10日均線</small></div>
+        <input type="number" id="ma10" placeholder="30.72" step="0.01">
+      </div>
+      <div class="input-row">
+        <div class="input-label">MA20<small>20日均線</small></div>
+        <input type="number" id="ma20" placeholder="30.01" step="0.01">
+      </div>
+      <div class="input-row">
+        <div class="input-label">RSI(5)<small>短期RSI</small></div>
+        <input type="number" id="rsi5" placeholder="65" step="0.1" min="0" max="100">
+      </div>
+      <div class="input-row">
+        <div class="input-label">RSI(10)<small>中期RSI</small></div>
+        <input type="number" id="rsi10" placeholder="61" step="0.1" min="0" max="100">
+      </div>
+      <div class="input-row">
+        <div class="input-label">MACD DIF<small>DIF值</small></div>
+        <input type="number" id="dif" placeholder="0.34" step="0.01">
+      </div>
+      <div class="input-row">
+        <div class="input-label">MACD Signal<small>MACD9值</small></div>
+        <input type="number" id="macd9" placeholder="0.09" step="0.01">
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">K線圖上傳（選填，輔助判斷）</div>
+    <div class="upload-area" id="uploadArea">
+      <input type="file" accept="image/*" multiple onchange="handleImages(this)">
+      <div id="uploadContent">
+        <div class="upload-icon">🖼️</div>
+        <div class="upload-title">上傳K線圖</div>
+        <div class="upload-hint">月線／週線／日線，有幾張傳幾張</div>
+      </div>
+      <div class="preview-grid" id="previewGrid" style="display:none"></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">月線趨勢判斷</div>
+    <div class="input-card">
+      <div class="input-row">
+        <div class="input-label">月線方向</div>
+        <select id="monthlyTrend">
+          <option value="down">明顯下跌</option>
+          <option value="down-slow">緩跌整理</option>
+          <option value="sideways">橫盤整理</option>
+          <option value="up-slow">緩升</option>
+          <option value="up">明顯上漲</option>
+        </select>
+      </div>
+      <div class="input-row">
+        <div class="input-label">週線方向</div>
+        <select id="weeklyTrend">
+          <option value="down">明顯下跌</option>
+          <option value="down-slow">緩跌整理</option>
+          <option value="sideways" selected>橫盤整理</option>
+          <option value="up-slow">緩升</option>
+          <option value="up">明顯上漲</option>
+        </select>
+      </div>
+      <div class="input-row">
+        <div class="input-label">日線方向</div>
+        <select id="dailyTrend">
+          <option value="down">明顯下跌</option>
+          <option value="down-slow">緩跌整理</option>
+          <option value="sideways">橫盤整理</option>
+          <option value="up-slow" selected>緩升</option>
+          <option value="up">明顯上漲</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="section" style="padding-bottom:20px">
+    <button class="analyze-btn" id="analyzeBtn" onclick="runAnalysis()">
+      ⚡ 開始技術分析
+    </button>
+  </div>
+</div>
+
+<!-- ══════════════ PAGE: 結果 ══════════════ -->
+
+<div class="page" id="page-result">
+  <div id="resultContent"></div>
+</div>
+
+<!-- ══════════════ PAGE: 記錄 ══════════════ -->
+
+<div class="page" id="page-history">
+  <div class="section" style="padding-bottom:8px">
+    <div class="section-title">分析記錄</div>
+  </div>
+  <div id="historyList" style="padding:0 16px"></div>
+</div>
+
+<!-- Bottom Nav -->
+
+<div class="bottom-nav">
+  <button class="nav-btn active" onclick="showPage('analyze',this)">
+    <span class="nav-icon">🔍</span>分析
+  </button>
+  <button class="nav-btn" onclick="showPage('result',this)">
+    <span class="nav-icon">📊</span>結果
+  </button>
+  <button class="nav-btn" onclick="showPage('history',this)">
+    <span class="nav-icon">🗂️</span>記錄
+  </button>
+</div>
+
+<script>
+// ── Navigation ──
+function showPage(id, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  if (btn) btn.classList.add('active');
+  if (id === 'history') renderHistory();
+}
+
+function toggleRcard(id) {
+  document.getElementById(id).classList.toggle('open');
+}
+
+// ── Image Upload ──
+const uploadedImages = [];
+
+function handleImages(input) {
+  const files = Array.from(input.files);
+  if (!files.length) return;
+  uploadedImages.length = 0;
+  const grid = document.getElementById('previewGrid');
+  grid.innerHTML = '';
+  grid.style.display = 'grid';
+  document.getElementById('uploadContent').style.display = 'none';
+  document.getElementById('uploadArea').classList.add('has-files');
+
+  const labels = ['月線', '週線', '日線', '圖4', '圖5'];
+  files.slice(0, 5).forEach((f, i) => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      uploadedImages[i] = e.target.result;
+      const div = document.createElement('div');
+      div.className = 'preview-item';
+      div.innerHTML = `<img src="${e.target.result}"><div class="preview-label">${labels[i] || '圖'+(i+1)}</div>`;
+      grid.appendChild(div);
+    };
+    reader.readAsDataURL(f);
+  });
+  showToast(`已選擇 ${Math.min(files.length,5)} 張K線圖`);
+}
+
+// ── Toast ──
+function showToast(msg, duration = 2000) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), duration);
+}
+
+// ── Core Analysis Engine ──
+function runAnalysis() {
+  const symbol = document.getElementById('symbol').value.trim() || '未知股票';
+  const price = parseFloat(document.getElementById('price').value);
+  const high = parseFloat(document.getElementById('high').value);
+  const low = parseFloat(document.getElementById('low').value);
+  const ma5 = parseFloat(document.getElementById('ma5').value);
+  const ma10 = parseFloat(document.getElementById('ma10').value);
+  const ma20 = parseFloat(document.getElementById('ma20').value);
+  const rsi5 = parseFloat(document.getElementById('rsi5').value);
+  const rsi10 = parseFloat(document.getElementById('rsi10').value);
+  const dif = parseFloat(document.getElementById('dif').value);
+  const macd9 = parseFloat(document.getElementById('macd9').value);
+  const mTrend = document.getElementById('monthlyTrend').value;
+  const wTrend = document.getElementById('weeklyTrend').value;
+  const dTrend = document.getElementById('dailyTrend').value;
+
+  if (!price || !high || !low) {
+    showToast('⚠️ 請填入現價、高點、低點');
+    return;
+  }
+
+  const btn = document.getElementById('analyzeBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>分析中...';
+
+  setTimeout(() => {
+    const result = analyze({ symbol, price, high, low, ma5, ma10, ma20, rsi5, rsi10, dif, macd9, mTrend, wTrend, dTrend });
+    renderResult(result);
+    saveHistory(result);
+    btn.disabled = false;
+    btn.innerHTML = '⚡ 開始技術分析';
+    showPage('result', document.querySelectorAll('.nav-btn')[1]);
+  }, 800);
+}
+
+function trendScore(t) {
+  return { down: -2, 'down-slow': -1, sideways: 0, 'up-slow': 1, up: 2 }[t] || 0;
+}
+
+function trendLabel(t) {
+  return { down: '明顯下跌', 'down-slow': '緩跌整理', sideways: '橫盤整理', 'up-slow': '緩升反彈', up: '明顯上漲' }[t] || t;
+}
+
+function analyze(d) {
+  const { symbol, price, high, low, ma5, ma10, ma20, rsi5, rsi10, dif, macd9, mTrend, wTrend, dTrend } = d;
+  const range = high - low;
+
+  // ── Fibonacci levels ──
+  const fib = {
+    '0%':    high,
+    '23.6%': high - range * 0.236,
+    '38.2%': high - range * 0.382,
+    '50%':   high - range * 0.500,
+    '61.8%': high - range * 0.618,
+    '78.6%': high - range * 0.786,
+    '100%':  low,
+    'Ext 127%': low - range * 0.272,
+    'Ext 161%': low - range * 0.618,
+  };
+
+  // ── Support/Resistance ──
+  const srLevels = [];
+  // Fibonacci-based
+  [['23.6%', '壓'], ['38.2%', '壓'], ['50%', '壓'], ['61.8%', '壓']].forEach(([k, type]) => {
+    const v = fib[k];
+    if (v > price) srLevels.push({ type: 'R', price: v.toFixed(2), label: `費波那契 ${k}`, strength: k === '38.2%' || k === '50%' ? '強' : '中' });
+  });
+  [['61.8%', '支'], ['78.6%', '支'], ['100%', '支']].forEach(([k]) => {
+    const v = fib[k];
+    if (v < price) srLevels.push({ type: 'S', price: v.toFixed(2), label: `費波那契 ${k}`, strength: k === '61.8%' ? '強' : k === '100%' ? '極強' : '中' });
+  });
+  // MA-based
+  if (ma20 && ma20 > price) srLevels.push({ type: 'R', price: ma20.toFixed(2), label: 'MA20 壓力', strength: '中' });
+  if (ma10 && ma10 > price) srLevels.push({ type: 'R', price: ma10.toFixed(2), label: 'MA10 壓力', strength: '弱' });
+  if (ma5 && ma5 < price)   srLevels.push({ type: 'S', price: ma5.toFixed(2), label: 'MA5 支撐', strength: '弱' });
+  if (ma10 && ma10 < price) srLevels.push({ type: 'S', price: ma10.toFixed(2), label: 'MA10 支撐', strength: '中' });
+  if (ma20 && ma20 < price) srLevels.push({ type: 'S', price: ma20.toFixed(2), label: 'MA20 支撐', strength: '強' });
+
+  srLevels.sort((a, b) => parseFloat(b.price) - parseFloat(a.price));
+
+  // ── MA Analysis ──
+  const maAnalysis = [];
+  const hasMa = ma5 && ma10 && ma20;
+  if (hasMa) {
+    if (ma5 > ma10 && ma10 > ma20) maAnalysis.push('MA5 > MA10 > MA20，均線多頭排列，短中期趨勢向上');
+    else if (ma5 < ma10 && ma10 < ma20) maAnalysis.push('MA5 < MA10 < MA20，均線空頭排列，短中期趨勢向下');
+    else maAnalysis.push('均線交叉糾結中，趨勢尚未明朗');
+
+    const priceVsMa20 = price > ma20 ? '站上' : '跌破';
+    maAnalysis.push(`現價 ${price} ${priceVsMa20} MA20(${ma20})，${priceVsMa20 === '站上' ? '多方守住中期均線' : '中期均線壓制'}`);
+    const maDist = ((price - ma20) / ma20 * 100).toFixed(1);
+    maAnalysis.push(`現價距 MA20 偏離 ${maDist}%，${Math.abs(parseFloat(maDist)) > 10 ? '偏離過大，注意回歸' : '偏離正常'}`);
+  }
+
+  // ── RSI Analysis ──
+  const rsiAnalysis = [];
+  if (rsi5) {
+    if (rsi5 >= 80) rsiAnalysis.push(`RSI(5)=${rsi5}，嚴重超買，短線回調風險高`);
+    else if (rsi5 >= 70) rsiAnalysis.push(`RSI(5)=${rsi5}，進入超買區，動能強但需警惕拉回`);
+    else if (rsi5 >= 50) rsiAnalysis.push(`RSI(5)=${rsi5}，多方占優，動能持續向上`);
+    else if (rsi5 >= 30) rsiAnalysis.push(`RSI(5)=${rsi5}，弱勢整理區，空方壓力仍在`);
+    else rsiAnalysis.push(`RSI(5)=${rsi5}，超賣區，短線存在技術反彈機會`);
+  }
+  if (rsi10) {
+    if (rsi10 >= 70) rsiAnalysis.push(`RSI(10)=${rsi10}，中期超買，留意高位震盪`);
+    else if (rsi10 >= 50) rsiAnalysis.push(`RSI(10)=${rsi10}，中期多方偏強`);
+    else if (rsi10 < 30) rsiAnalysis.push(`RSI(10)=${rsi10}，中期超賣，底部訊號增強`);
+    else rsiAnalysis.push(`RSI(10)=${rsi10}，中期偏弱`);
+  }
+  if (rsi5 && rsi10) {
+    if (rsi5 > rsi10) rsiAnalysis.push('短期RSI高於中期RSI，短線動能優於中線，偏多');
+    else rsiAnalysis.push('短期RSI低於中期RSI，短線動能衰減，注意');
+  }
+
+  // ── MACD Analysis ──
+  const macdAnalysis = [];
+  if (dif !== undefined && macd9 !== undefined && !isNaN(dif) && !isNaN(macd9)) {
+    const osc = dif - macd9;
+    if (dif > 0 && macd9 > 0) macdAnalysis.push(`MACD雙線在零軸上方（DIF=${dif}, MACD9=${macd9}），市場整體偏多`);
+    else if (dif < 0 && macd9 < 0) macdAnalysis.push(`MACD雙線在零軸下方（DIF=${dif}, MACD9=${macd9}），市場整體偏空`);
+    else macdAnalysis.push(`MACD雙線穿越零軸中（DIF=${dif}, MACD9=${macd9}），趨勢轉折關鍵位`);
+
+    if (dif > macd9) macdAnalysis.push(`DIF>${macd9}，MACD金叉/多頭，柱狀圖為正，動能向上`);
+    else macdAnalysis.push(`DIF<${macd9}，MACD死叉/空頭，柱狀圖為負，動能向下`);
+
+    if (Math.abs(osc) < 0.1 * Math.abs(dif || 1)) macdAnalysis.push('DIF與Signal接近，即將產生交叉訊號，注意方向確認');
+  }
+
+  // ── Trend Multi-frame ──
+  const tScores = [trendScore(mTrend), trendScore(wTrend), trendScore(dTrend)];
+  const avgScore = tScores.reduce((a, b) => a + b, 0) / 3;
+
+  // ── Bias Score (0-100) ──
+  let biasScore = 50;
+  // Trend contribution
+  biasScore += avgScore * 10;
+  // MA
+  if (hasMa) {
+    if (ma5 > ma10) biasScore += 5;
+    if (ma10 > ma20) biasScore += 5;
+    if (price > ma20) biasScore += 5;
+  }
+  // RSI
+  if (rsi5) {
+    if (rsi5 > 60) biasScore += 5;
+    else if (rsi5 < 40) biasScore -= 5;
+  }
+  // MACD
+  if (!isNaN(dif) && !isNaN(macd9)) {
+    if (dif > 0) biasScore += 3;
+    if (dif > macd9) biasScore += 3;
+  }
+  biasScore = Math.max(5, Math.min(95, biasScore));
+  const bias = biasScore >= 58 ? 'BULL' : biasScore <= 42 ? 'BEAR' : 'NEUTRAL';
+
+  // ── Wave / Pattern Analysis ──
+  const patterns = [];
+  const fibRetrace = (price - low) / range;
+  if (fibRetrace < 0.1) patterns.push('股價仍接近低位，底部築底中，尚未出現明確反轉訊號');
+  else if (fibRetrace < 0.3) patterns.push(`股價已從低點反彈 ${(fibRetrace*100).toFixed(0)}%，初段反彈，尚未進入主升波`);
+  else if (fibRetrace < 0.5) patterns.push(`股價反彈 ${(fibRetrace*100).toFixed(0)}%，進入費波那契 38.2% 附近，遭遇較大壓力`);
+  else if (fibRetrace < 0.7) patterns.push(`股價反彈超過 50%，強勢反彈，需觀察是否形成趨勢反轉`);
+  else patterns.push('股價反彈幅度大，接近前高，需評估是否突破或形成雙頂');
+
+  if (dTrend === 'up' || dTrend === 'up-slow') {
+    if (wTrend === 'down' || wTrend === 'down-slow') patterns.push('日線多頭vs週線空頭：目前屬於大跌後反彈，非趨勢反轉，反彈幅度有限');
+  }
+
+  if (hasMa && ma5 > ma10 && ma10 > ma20 && price > ma5) patterns.push('均線多頭排列且股價站上所有均線，符合波浪理論中間升浪初期特徵');
+  if (hasMa && ma5 < ma10 && ma10 < ma20) patterns.push('均線空頭排列，可能處於波浪理論第3或第5跌浪，反彈需謹慎');
+
+  // ── Elliott Wave hints ──
+  const waveHints = [];
+  if (mTrend === 'down' && (wTrend === 'sideways' || wTrend === 'up-slow') && (dTrend === 'up-slow' || dTrend === 'up')) {
+    waveHints.push('從多時間框架看，符合大跌後底部反彈結構（可能為A-B-C修正末段或第5浪結束後反彈）');
+    waveHints.push('若底部確立，波浪反彈第一目標約在費波那契 23.6%，第二目標 38.2%');
+  } else if (mTrend === 'up' && wTrend === 'up' && dTrend === 'up') {
+    waveHints.push('三個時間框架均向上，可能處於主升浪第3浪，動能最強階段');
+  } else {
+    waveHints.push('趨勢方向混雜，多空交戰，建議等待方向明確後再操作');
+  }
+
+  // ── Signals ──
+  const signals = [];
+  if (bias === 'BULL') {
+    signals.push(`短線偏多操作，現價 ${price} 附近可考慮輕倉布局`);
+    const r1 = srLevels.find(s => s.type === 'R');
+    if (r1) signals.push(`第一目標壓力：${r1.price}（${r1.label}）`);
+    const s1 = srLevels.find(s => s.type === 'S');
+    if (s1) signals.push(`止損參考：跌破 ${s1.price} 以下出場`);
+  } else if (bias === 'BEAR') {
+    signals.push('整體偏空，不宜做多，可等待底部確認訊號');
+    signals.push(`若反彈至壓力區可考慮減碼，止損設於前高`);
+  } else {
+    signals.push('方向不明，建議觀望等待突破訊號');
+    signals.push(`上方突破壓力可追多，下方跌破支撐則觀望`);
+  }
+
+  // ── Risk ──
+  const risk = [];
+  if (rsi5 >= 70) risk.push('RSI短線超買，避免追高');
+  if (mTrend === 'down' || wTrend === 'down') risk.push('大/中趨勢向下，反彈行情不宜重倉，以輕倉短線操作為主');
+  risk.push(`嚴格執行止損，跌破關鍵支撐 ${low} 立即出場`);
+  risk.push('本分析僅供技術參考，不構成投資建議，操作需自行判斷');
+
+  // ── Summary ──
+  const tLabels = { down: '下跌', 'down-slow': '緩跌', sideways: '橫盤', 'up-slow': '緩升', up: '上漲' };
+  const summary = `${symbol} 現價 ${price}，月線${tLabels[mTrend]}、週線${tLabels[wTrend]}、日線${tLabels[dTrend]}。` +
+    `整體偏向${bias === 'BULL' ? '看多' : bias === 'BEAR' ? '看空' : '中立'}（評分 ${biasScore.toFixed(0)}/100）。` +
+    `費波那契關鍵位分佈在 ${fib['23.6%'].toFixed(2)}（23.6%）至 ${fib['61.8%'].toFixed(2)}（61.8%），操作上${bias === 'BULL' ? '以支撐買入、壓力獲利為策略' : bias === 'BEAR' ? '以壓力放空或觀望為主' : '等待方向突破後再行動'}。`;
+
+  return {
+    symbol, price, high, low, bias, biasScore,
+    fib, srLevels, maAnalysis, rsiAnalysis, macdAnalysis,
+    patterns, waveHints, signals, risk, summary,
+    mTrend, wTrend, dTrend, rsi5, rsi10, dif, macd9, ma5, ma10, ma20,
+    timestamp: new Date().toLocaleString('zh-TW')
+  };
+}
+
+// ── Render Result ──
+function renderResult(d) {
+  const biasClass = d.bias === 'BULL' ? 'bias-bull' : d.bias === 'BEAR' ? 'bias-bear' : 'bias-neutral';
+  const biasText = d.bias === 'BULL' ? '📈 看多' : d.bias === 'BEAR' ? '📉 看空' : '➡️ 中立';
+  const barColor = d.bias === 'BULL' ? '#22c55e' : d.bias === 'BEAR' ? '#ef4444' : '#f59e0b';
+
+  const bullets = arr => arr.map(t => `<div class="bullet">${t}</div>`).join('');
+
+  const srRows = d.srLevels.slice(0, 8).map(s => `
+    <div class="level-item">
+      <div class="dot ${s.type === 'R' ? 'dot-r' : 'dot-s'}"></div>
+      <div style="flex:1;font-size:13px">${s.label}</div>
+      <div class="strength">${s.strength}</div>
+      <div class="price">${s.price}</div>
+    </div>`).join('');
+
+  const fibRows = Object.entries(d.fib).slice(1, 7).map(([k, v]) => `
+    <div class="level-item">
+      <div style="width:8px;height:8px;border-radius:50%;background:var(--accent);flex-shrink:0"></div>
+      <div style="flex:1;font-size:13px;font-family:'DM Mono',monospace">${k}</div>
+      <div class="price">${v.toFixed(2)}</div>
+    </div>`).join('');
+
+  const indBoxes = [
+    { name: 'RSI(5)', val: d.rsi5, signal: d.rsi5 >= 70 ? '⚠️ 超買' : d.rsi5 <= 30 ? '🔔 超賣' : d.rsi5 >= 50 ? '✅ 偏多' : '🔻 偏空', color: d.rsi5 >= 70 ? 'var(--red)' : d.rsi5 <= 30 ? 'var(--green)' : d.rsi5 >= 50 ? 'var(--green)' : 'var(--muted)' },
+    { name: 'RSI(10)', val: d.rsi10, signal: d.rsi10 >= 70 ? '⚠️ 超買' : d.rsi10 <= 30 ? '🔔 超賣' : d.rsi10 >= 50 ? '✅ 偏多' : '🔻 偏空', color: d.rsi10 >= 50 ? 'var(--green)' : 'var(--muted)' },
+    { name: 'MACD DIF', val: d.dif, signal: d.dif > 0 ? '✅ 零軸上' : '🔻 零軸下', color: d.dif > 0 ? 'var(--green)' : 'var(--red)' },
+    { name: 'MACD交叉', val: d.dif > d.macd9 ? '金叉' : '死叉', signal: d.dif > d.macd9 ? '✅ 金叉' : '🔻 死叉', color: d.dif > d.macd9 ? 'var(--green)' : 'var(--red)', noMono: true },
+  ].filter(x => x.val !== undefined && !isNaN(x.val)).map(x => `
+    <div class="ind-box">
+      <div class="ind-name">${x.name}</div>
+      <div class="ind-val" style="color:${x.color};${x.noMono?'font-family:inherit':''}">${x.val}</div>
+      <div class="ind-signal" style="color:${x.color}">${x.signal}</div>
+    </div>`).join('');
+
+  document.getElementById('resultContent').innerHTML = `
+    <div class="fade-up">
+      <div class="result-header">
+        <div class="ticker">${d.symbol}</div>
+        <div class="bias-badge ${biasClass}">${biasText}</div>
+      </div>
+
+      <div class="score-bar-wrap">
+        <div class="score-row">
+          <span class="score-label">多空評分</span>
+          <span class="score-val" style="color:${barColor}">${d.biasScore.toFixed(0)} / 100</span>
+        </div>
+        <div class="bar-track">
+          <div class="bar-fill" id="barFill" style="width:0%;background:${barColor}"></div>
+        </div>
+        <div class="score-row" style="margin-top:8px;margin-bottom:0">
+          <span class="score-label">現價 ${d.price}</span>
+          <span class="score-label">高 ${d.high} ／ 低 ${d.low}</span>
+        </div>
+      </div>
+
+      <div class="rcard open" id="rc1">
+        <div class="rcard-header" onclick="toggleRcard('rc1')">
+          <span class="rcard-icon">📊</span>
+          <span class="rcard-title">多時間框架趨勢</span>
+          <span class="rcard-chevron">▼</span>
+        </div>
+        <div class="rcard-body">
+          ${bullets([
+            `月線：${{'down':'明顯下跌 ↓','down-slow':'緩跌整理 ↘','sideways':'橫盤整理 →','up-slow':'緩升反彈 ↗','up':'明顯上漲 ↑'}[d.mTrend]}`,
+            `週線：${{'down':'明顯下跌 ↓','down-slow':'緩跌整理 ↘','sideways':'橫盤整理 →','up-slow':'緩升反彈 ↗','up':'明顯上漲 ↑'}[d.wTrend]}`,
+            `日線：${{'down':'明顯下跌 ↓','down-slow':'緩跌整理 ↘','sideways':'橫盤整理 →','up-slow':'緩升反彈 ↗','up':'明顯上漲 ↑'}[d.dTrend]}`,
+          ])}
+        </div>
+      </div>
+
+      <div class="rcard open" id="rc-ind">
+        <div class="rcard-header" onclick="toggleRcard('rc-ind')">
+          <span class="rcard-icon">🔢</span>
+          <span class="rcard-title">技術指標訊號</span>
+          <span class="rcard-chevron">▼</span>
+        </div>
+        <div class="rcard-body">
+          <div class="ind-grid">${indBoxes}</div>
+          ${bullets([...d.maAnalysis, ...d.rsiAnalysis, ...d.macdAnalysis])}
+        </div>
+      </div>
+
+      <div class="rcard open" id="rc2">
+        <div class="rcard-header" onclick="toggleRcard('rc2')">
+          <span class="rcard-icon">🔲</span>
+          <span class="rcard-title">支撐 / 壓力位</span>
+          <span class="rcard-chevron">▼</span>
+        </div>
+        <div class="rcard-body">${srRows || '<div class="bullet">請填入更多數據以計算</div>'}</div>
+      </div>
+
+      <div class="rcard open" id="rc3">
+        <div class="rcard-header" onclick="toggleRcard('rc3')">
+          <span class="rcard-icon">🌀</span>
+          <span class="rcard-title">費波那契關鍵位</span>
+          <span class="rcard-chevron">▼</span>
+        </div>
+        <div class="rcard-body">
+          <div style="font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;margin-bottom:6px">高點 ${d.high} → 低點 ${d.low}</div>
+          ${fibRows}
+        </div>
+      </div>
+
+      <div class="rcard open" id="rc4">
+        <div class="rcard-header" onclick="toggleRcard('rc4')">
+          <span class="rcard-icon">🔷</span>
+          <span class="rcard-title">形態 / 波浪分析</span>
+          <span class="rcard-chevron">▼</span>
+        </div>
+        <div class="rcard-body">
+          ${bullets([...d.patterns, ...d.waveHints])}
+        </div>
+      </div>
+
+      <div class="rcard open" id="rc5">
+        <div class="rcard-header" onclick="toggleRcard('rc5')">
+          <span class="rcard-icon">🎯</span>
+          <span class="rcard-title">操作建議</span>
+          <span class="rcard-chevron">▼</span>
+        </div>
+        <div class="rcard-body">
+          ${bullets(d.signals)}
+        </div>
+      </div>
+
+      <div class="rcard open" id="rc6">
+        <div class="rcard-header" onclick="toggleRcard('rc6')">
+          <span class="rcard-icon">⚠️</span>
+          <span class="rcard-title">風險提示</span>
+          <span class="rcard-chevron">▼</span>
+        </div>
+        <div class="rcard-body">
+          ${bullets(d.risk)}
+        </div>
+      </div>
+
+      <div class="rcard open" id="rc7">
+        <div class="rcard-header" onclick="toggleRcard('rc7')">
+          <span class="rcard-icon">📝</span>
+          <span class="rcard-title">總結</span>
+          <span class="rcard-chevron">▼</span>
+        </div>
+        <div class="rcard-body">
+          <div class="summary-box">${d.summary}</div>
+        </div>
+      </div>
+
+      <div style="padding:16px;text-align:center;font-size:11px;color:var(--muted);font-family:'DM Mono',monospace">
+        ${d.timestamp}
+      </div>
+    </div>
+  `;
+
+  setTimeout(() => {
+    const fill = document.getElementById('barFill');
+    if (fill) fill.style.width = d.biasScore + '%';
+  }, 100);
+}
+
+// ── History ──
+function saveHistory(result) {
+  let history = JSON.parse(localStorage.getItem('kline_history') || '[]');
+  history.unshift({ symbol: result.symbol, bias: result.bias, biasScore: result.biasScore, timestamp: result.timestamp, data: result });
+  history = history.slice(0, 30);
+  localStorage.setItem('kline_history', JSON.stringify(history));
+}
+
+function renderHistory() {
+  const history = JSON.parse(localStorage.getItem('kline_history') || '[]');
+  const el = document.getElementById('historyList');
+  if (!history.length) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div><div class="empty-text">還沒有分析記錄</div></div>`;
+    return;
+  }
+  const biasLabel = b => b === 'BULL' ? '📈 看多' : b === 'BEAR' ? '📉 看空' : '➡️ 中立';
+  const biasColor = b => b === 'BULL' ? 'var(--green)' : b === 'BEAR' ? 'var(--red)' : 'var(--gold)';
+  el.innerHTML = history.map((h, i) => `
+    <div class="history-item" onclick="loadHistory(${i})">
+      <div>
+        <div class="hist-ticker">${h.symbol}</div>
+        <div class="hist-date">${h.timestamp}</div>
+      </div>
+      <div style="color:${biasColor(h.bias)};font-size:13px;font-weight:600">${biasLabel(h.bias)}</div>
+      <div class="hist-arrow">›</div>
+    </div>`).join('');
+}
+
+function loadHistory(i) {
+  const history = JSON.parse(localStorage.getItem('kline_history') || '[]');
+  if (history[i]) {
+    renderResult(history[i].data);
+    showPage('result', document.querySelectorAll('.nav-btn')[1]);
+  }
+}
+</script>
+
+</body>
+</html>
