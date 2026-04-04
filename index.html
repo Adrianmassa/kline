@@ -191,10 +191,13 @@ select{width:118px;text-align:center;}
 
   <div class="section">
     <div class="section-title">趨勢方向</div>
-    <div class="input-card">
-      <div class="input-row"><div class="input-label">大週期趨勢</div><select id="majorTrend"><option value="down">明顯下跌</option><option value="down-slow">緩跌整理</option><option value="sideways">橫盤整理</option><option value="up-slow">緩升</option><option value="up">明顯上漲</option></select></div>
-      <div class="input-row"><div class="input-label">中週期趨勢</div><select id="midTrend"><option value="down">明顯下跌</option><option value="down-slow">緩跌整理</option><option value="sideways" selected>橫盤整理</option><option value="up-slow">緩升</option><option value="up">明顯上漲</option></select></div>
-      <div class="input-row"><div class="input-label">現週期趨勢</div><select id="currTrend"><option value="down">明顯下跌</option><option value="down-slow">緩跌整理</option><option value="sideways">橫盤整理</option><option value="up-slow" selected>緩升</option><option value="up">明顯上漲</option></select></div>
+    <div class="input-card" style="padding:12px 14px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+        <span style="font-size:13px;color:var(--accent);font-family:'DM Mono',monospace">🤖 系統根據數值自動判斷</span>
+      </div>
+      <div style="font-size:11px;color:var(--muted);line-height:1.7">
+        根據 MA排列、現價位置、MACD、RSI、費波那契回撤自動計算大/中/現週期趨勢方向，填入數值後按分析即可。
+      </div>
     </div>
   </div>
 
@@ -291,9 +294,8 @@ function runAnalysis(){
   const volPrev=parseFloat(document.getElementById('volumePrev').value);
   const dayChg=parseFloat(document.getElementById('dayChange').value);
   const structChip=document.getElementById('structChip').value;
-  const majT=document.getElementById('majorTrend').value;
-  const midT=document.getElementById('midTrend').value;
-  const curT=document.getElementById('currTrend').value;
+  // 趨勢方向由系統自動判斷（在analyze函數內計算）
+  const majT='auto'; const midT='auto'; const curT='auto';
   if(!pr||!hi||!lo){showToast('⚠️ 請填入現價、高點、低點');return;}
   const btn=document.getElementById('analyzeBtn');
   btn.disabled=true;btn.innerHTML='<span class="spinner"></span>分析中...';
@@ -308,6 +310,64 @@ function runAnalysis(){
 function analyze({sym,tf,pr,hi,lo,cost,ma5,ma10,ma20,rsi5,rsi10,rsiPrev,dif,macd9,macdCurr,macdPrev,vol,volPrev,dayChg,majT,midT,curT,mode}){
   const range=hi-lo;
   const fib={'0%':hi,'23.6%':hi-range*0.236,'38.2%':hi-range*0.382,'50%':hi-range*0.5,'61.8%':hi-range*0.618,'78.6%':hi-range*0.786,'100%':lo,'Ext127%':lo-range*0.272,'Ext161%':lo-range*0.618};
+
+  // ── 自動趨勢判斷引擎 ──
+  // 大週期：主要根據 MA20 斜率代理（用現價位置 + 費波那契位置）
+  // 中週期：根據 MA10 + MACD 零軸位置
+  // 現週期：根據 MA5 + RSI + MACD 金死叉
+
+  function autoTrend(pricePos, maSlope, rsiVal, macdVal, fibRetrace) {
+    let score = 0;
+    // 價格在費波那契位置
+    if(fibRetrace < 0.2) score += 2;
+    else if(fibRetrace < 0.4) score += 1;
+    else if(fibRetrace > 0.7) score -= 2;
+    else if(fibRetrace > 0.5) score -= 1;
+    // MA斜率代理（現價 vs MA）
+    if(!isNaN(maSlope)) {
+      if(pricePos > maSlope * 1.05) score += 2;
+      else if(pricePos > maSlope) score += 1;
+      else if(pricePos < maSlope * 0.95) score -= 2;
+      else score -= 1;
+    }
+    // RSI
+    if(!isNaN(rsiVal)) {
+      if(rsiVal >= 60) score += 1;
+      else if(rsiVal <= 40) score -= 1;
+    }
+    // MACD
+    if(!isNaN(macdVal)) {
+      if(macdVal > 0) score += 1;
+      else score -= 1;
+    }
+    if(score >= 4) return 'up';
+    if(score >= 2) return 'up-slow';
+    if(score >= -1) return 'sideways';
+    if(score >= -3) return 'down-slow';
+    return 'down';
+  }
+
+  const fibRetrace = range > 0 ? (pr - lo) / range : 0.5;
+  // 大週期：用MA20代理（最慢的均線），MACD長期判斷
+  const calcMajT = !isNaN(ma20) ? autoTrend(pr, ma20, isNaN(rsi10)?NaN:rsi10, isNaN(dif)?NaN:dif, fibRetrace)
+                                 : (fibRetrace > 0.5 ? 'up-slow' : 'down-slow');
+  // 中週期：用MA10代理
+  const calcMidT = !isNaN(ma10) ? autoTrend(pr, ma10, isNaN(rsi10)?NaN:rsi10, isNaN(macdCurr)?NaN:macdCurr, fibRetrace)
+                                 : calcMajT;
+  // 現週期：用MA5代理（最快），RSI5，MACD現值
+  const calcCurT = !isNaN(ma5) ? autoTrend(pr, ma5, isNaN(rsi5)?NaN:rsi5, isNaN(macdCurr)?NaN:macdCurr, fibRetrace)
+                                : calcMidT;
+
+  // 覆蓋傳入的'auto'值
+  const majT = calcMajT;
+  const midT = calcMidT;
+  const curT = calcCurT;
+
+  var trendAutoNote = {
+    major: 'MA20='+(!isNaN(ma20)?ma20:'N/A')+'，費波回撤='+(fibRetrace*100).toFixed(0)+'%',
+    mid: 'MA10='+(!isNaN(ma10)?ma10:'N/A')+'，MACD柱='+(!isNaN(macdCurr)?macdCurr:'N/A'),
+    curr: 'MA5='+(!isNaN(ma5)?ma5:'N/A')+'，RSI(5)='+(!isNaN(rsi5)?rsi5:'N/A'),
+  };
   const sr=[];
   [['23.6%','中'],['38.2%','強'],['50%','強'],['61.8%','中']].forEach(([k,s])=>{if(fib[k]>pr)sr.push({type:'R',price:fib[k].toFixed(2),label:`費波 ${k}`,strength:s});});
   [['61.8%','強'],['78.6%','中'],['100%','極強']].forEach(([k,s])=>{if(fib[k]<pr)sr.push({type:'S',price:fib[k].toFixed(2),label:`費波 ${k}`,strength:s});});
@@ -318,7 +378,7 @@ function analyze({sym,tf,pr,hi,lo,cost,ma5,ma10,ma20,rsi5,rsi10,rsiPrev,dif,macd
 
   const maA=[];
   const hma=!isNaN(ma5)&&!isNaN(ma10)&&!isNaN(ma20);
-  if(hma){if(ma5>ma10&&ma10>ma20)maA.push({text:'MA5>MA10>MA20，均線多頭排列',type:'ok'});else if(ma5<ma10&&ma10<ma20)maA.push({text:'MA5<MA10<MA20，均線空頭排列',type:'warn'});else maA.push({text:'均線交叉糾結，趨勢不明',type:'caution'});maA.push({text:`現價${pr>ma20?'站上':'跌破'} MA20(${ma20})，${pr>ma20?'多方守住中期均線':'中期均線形成壓制'}`,type:pr>ma20?'ok':'caution'});}
+  if(hma){if(ma5>ma10&&ma10>ma20)maA.push({text:'MA5>MA10>MA20，均線多頭排列',type:'ok'});else if(ma5<ma10&&ma10<ma20)maA.push({text:'MA5<MA10<MA20，均線空頭排列',type:'warn'});else maA.push({text:'均線交叉糾結，趨勢不明',type:'caution'});maA.push({text:'現價'+(pr>ma20?'站上':'跌破')+' MA20('+ma20+')'+'，'+(pr>ma20?'多方守住中期均線':'中期均線形成壓制'),type:pr>ma20?'ok':'caution'});}
 
   const rsiA=[];
   if(!isNaN(rsi5)){if(rsi5>=85)rsiA.push({text:`RSI(5)=${rsi5} ⚡ 觸發R2：嚴重超買，應先賣1/2`,type:'warn'});else if(rsi5>=70)rsiA.push({text:`RSI(5)=${rsi5}，超買區，警惕拉回`,type:'caution'});else if(rsi5>=50)rsiA.push({text:`RSI(5)=${rsi5}，多方占優`,type:'ok'});else if(rsi5>=40)rsiA.push({text:`RSI(5)=${rsi5}，接近40-50，注意P1強攻條件`,type:'caution'});else rsiA.push({text:`RSI(5)=${rsi5}，超賣區，反彈機會`,type:'ok'});}
@@ -528,9 +588,11 @@ function analyze({sym,tf,pr,hi,lo,cost,ma5,ma10,ma20,rsi5,rsi10,rsiPrev,dif,macd
 
   const ctx=tfc(tf);
   const tl={down:'下跌','down-slow':'緩跌',sideways:'橫盤','up-slow':'緩升',up:'上漲'};
-  const sum=`${sym}（${tfl(tf)}）現價${pr}，${ctx.major}${tl[majT]}、${ctx.mid}${tl[midT]}、${ctx.curr}${tl[curT]}。整體${bias==='BULL'?'看多':bias==='BEAR'?'看空':'中立'}（${bs.toFixed(0)}/100）${mode==='A'?' A模式進攻':mode==='B'?' B模式防守':''}。費波關鍵壓力${fib['23.6%'].toFixed(2)}-${fib['38.2%'].toFixed(2)}，支撐${fib['78.6%'].toFixed(2)}-${lo}。`;
+  var biasWord=bias==='BULL'?'看多':bias==='BEAR'?'看空':'中立';
+  var modeWord=mode==='A'?' A模式進攻':mode==='B'?' B模式防守':'';
+  var sum=sym+'（'+tfl(tf)+'）現價'+pr+'，'+ctx.major+tl[majT]+'、'+ctx.mid+tl[midT]+'、'+ctx.curr+tl[curT]+'。整體'+biasWord+'（'+bs.toFixed(0)+'/100）'+modeWord+'。費波關鍵壓力'+fib['23.6%'].toFixed(2)+'-'+fib['38.2%'].toFixed(2)+'，支撐'+fib['78.6%'].toFixed(2)+'-'+lo+'。';
 
-  return{sym,tf,pr,hi,lo,bias,bs,fib,sr,maA,rsiA,macdA,momA,volA,pat,wave,sig,risk,rules,sum,majT,midT,curT,mode,structVerdict,structVerdictText,structVerdictClass,structVerdictDesc,structFinalScore,structDetails,timestamp:new Date().toLocaleString('zh-TW')};
+  return{sym,tf,pr,hi,lo,bias,bs,fib,sr,maA,rsiA,macdA,momA,volA,pat,wave,sig,risk,rules,sum,majT,midT,curT,mode,trendAutoNote,structVerdict,structVerdictText,structVerdictClass,structVerdictDesc,structFinalScore,structDetails,timestamp:new Date().toLocaleString('zh-TW')};
 }
 
 function renderResult(d){
@@ -568,7 +630,17 @@ function renderResult(d){
       <div style="margin-top:10px;text-align:right;font-family:'DM Mono',monospace;font-size:11px;color:var(--muted)">綜合結構評分 <span style="color:${d.structVerdictClass==='good'?'var(--green)':d.structVerdictClass==='weak'?'var(--gold)':'var(--red)'};font-size:14px;font-weight:700">${d.structFinalScore}</span> / 100</div>
     </div>
     ${rulesH}
-    <div class="rcard open" id="rc-trend"><div class="rcard-header" onclick="toggleRcard('rc-trend')"><span class="rcard-icon">📊</span><span class="rcard-title">多框架趨勢</span><span class="rcard-chevron">▼</span></div><div class="rcard-body">${buls([{text:`${ctx.major}（大週期）：${ttMap[d.majT]}`,type:ts(d.majT)>0?'ok':ts(d.majT)<0?'warn':''},{text:`${ctx.mid}（中週期）：${ttMap[d.midT]}`,type:ts(d.midT)>0?'ok':ts(d.midT)<0?'warn':''},{text:`${ctx.curr}（現週期）：${ttMap[d.curT]}`,type:ts(d.curT)>0?'ok':ts(d.curT)<0?'warn':''}])}</div></div>
+    <div class="rcard open" id="rc-trend"><div class="rcard-header" onclick="toggleRcard('rc-trend')"><span class="rcard-icon">📊</span><span class="rcard-title">多框架趨勢 <span style="font-size:10px;color:var(--accent);font-family:'DM Mono',monospace">🤖 AUTO</span></span><span class="rcard-chevron">▼</span></div><div class="rcard-body">
+      ${(function(){
+        var tn=d.trendAutoNote||{};
+        var rows=[
+          {text:ctx.major+'（大週期）：'+ttMap[d.majT]+' <span style="font-size:10px;color:var(--muted)">'+( tn.major||'')+'</span>',type:ts(d.majT)>0?'ok':ts(d.majT)<0?'warn':''},
+          {text:ctx.mid+'（中週期）：'+ttMap[d.midT]+' <span style="font-size:10px;color:var(--muted)">'+(tn.mid||'')+'</span>',type:ts(d.midT)>0?'ok':ts(d.midT)<0?'warn':''},
+          {text:ctx.curr+'（現週期）：'+ttMap[d.curT]+' <span style="font-size:10px;color:var(--muted)">'+(tn.curr||'')+'</span>',type:ts(d.curT)>0?'ok':ts(d.curT)<0?'warn':''},
+        ];
+        return buls(rows);
+      })()}
+    </div></div>
     <div class="rcard open" id="rc-mom"><div class="rcard-header" onclick="toggleRcard('rc-mom')"><span class="rcard-icon">⚡</span><span class="rcard-title">微積分動能分析</span><span class="rcard-chevron">▼</span></div><div class="rcard-body">${d.momA.length?buls([...d.momA,...d.volA]):'<div class="bullet" style="color:var(--muted)">請填入前期／本期MACD柱及RSI以啟用</div>'}</div></div>
     <div class="rcard open" id="rc-ind"><div class="rcard-header" onclick="toggleRcard('rc-ind')"><span class="rcard-icon">🔢</span><span class="rcard-title">技術指標訊號</span><span class="rcard-chevron">▼</span></div><div class="rcard-body">${indR?`<div class="ind-grid">${indR}</div>`:''} ${buls([...d.maA,...d.rsiA,...d.macdA])}</div></div>
     <div class="rcard open" id="rc-sr"><div class="rcard-header" onclick="toggleRcard('rc-sr')"><span class="rcard-icon">🔲</span><span class="rcard-title">支撐 / 壓力位</span><span class="rcard-chevron">▼</span></div><div class="rcard-body">${srR||'<div class="bullet" style="color:var(--muted)">請填入更多數據</div>'}</div></div>
