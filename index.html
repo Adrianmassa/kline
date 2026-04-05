@@ -184,11 +184,16 @@ select{width:118px;text-align:center;}
   <div class="section">
     <div class="section-title">技術結構 A-D</div>
     <div class="input-card" style="padding:12px 14px">
-      <div style="font-size:12px;color:var(--accent);margin-bottom:6px">&#x1F916; A/B/C 系統自動判斷</div>
-      <div style="font-size:11px;color:var(--muted);line-height:1.7">根據填入的數值自動計算價格結構、量能、動能。</div>
+      <div style="font-size:12px;color:var(--accent);margin-bottom:6px">&#x1F916; A/B/C/D 全部系統自動判斷</div>
+      <div style="font-size:11px;color:var(--muted);line-height:1.7">根據填入的數值自動計算。D籌碼請填入三大法人近5日買賣數據。</div>
     </div>
     <div class="input-card">
-      <div class="input-row"><div class="input-label">D. 籌碼主力<small>唯一需手動選擇，權重15%</small></div><select id="structChip"><option value="unknown" selected>&#x2014; 不知道</option><option value="good">&#x2705; 大戶持續買超</option><option value="weak">&#x26A0;&#xFE0F; 買超停滯轉弱</option><option value="broken">&#x1F6A8; 大戶轉賣破位</option></select></div>
+      <div style="padding:10px 14px 6px;font-size:10px;color:var(--muted);letter-spacing:1px">三大法人合計（張，買超填正數，賣超填負數）</div>
+      <div class="input-row"><div class="input-label">今日／最新日<small>最新一日三大法人合計</small></div><input type="number" id="chip_d0" placeholder="922" step="1"></div>
+      <div class="input-row"><div class="input-label">前1日<small>昨日合計</small></div><input type="number" id="chip_d1" placeholder="6173" step="1"></div>
+      <div class="input-row"><div class="input-label">前2日<small></small></div><input type="number" id="chip_d2" placeholder="177" step="1"></div>
+      <div class="input-row"><div class="input-label">前3日<small>（選填）</small></div><input type="number" id="chip_d3" placeholder="5521" step="1"></div>
+      <div class="input-row"><div class="input-label">前4日<small>（選填）</small></div><input type="number" id="chip_d4" placeholder="5459" step="1"></div>
     </div>
   </div>
   <div class="section">
@@ -342,7 +347,11 @@ function runAnalysis() {
   var rsi5 = g('rsi5'), rsi10 = g('rsi10'), rsiPrev = g('rsiPrev');
   var dif = g('dif'), macd9 = g('macd9'), macdCurr = g('macdCurr'), macdPrev = g('macdPrev');
   var vol = g('volume'), volPrev = g('volumePrev'), dayChg = g('dayChange');
-  var chip = gs('structChip');
+  var chip_d0 = g('chip_d0');
+  var chip_d1 = g('chip_d1');
+  var chip_d2 = g('chip_d2');
+  var chip_d3 = g('chip_d3');
+  var chip_d4 = g('chip_d4');
   var mode = tradeMode;
 
   if (!pr || !hi || !lo) { showToast('請填入現價、高點、低點'); return; }
@@ -352,7 +361,7 @@ function runAnalysis() {
   btn.innerHTML = '<span class="spinner"></span>分析中...';
 
   setTimeout(function() {
-    var res = analyze(sym, tf, pr, hi, lo, cost, ma5, ma10, ma20, rsi5, rsi10, rsiPrev, dif, macd9, macdCurr, macdPrev, vol, volPrev, dayChg, chip, mode);
+    var res = analyze(sym, tf, pr, hi, lo, cost, ma5, ma10, ma20, rsi5, rsi10, rsiPrev, dif, macd9, macdCurr, macdPrev, vol, volPrev, dayChg, chip_d0, chip_d1, chip_d2, chip_d3, chip_d4, mode);
     renderResult(res);
     saveHistory(res);
     btn.disabled = false;
@@ -361,7 +370,7 @@ function runAnalysis() {
   }, 600);
 }
 
-function analyze(sym, tf, pr, hi, lo, cost, ma5, ma10, ma20, rsi5, rsi10, rsiPrev, dif, macd9, macdCurr, macdPrev, vol, volPrev, dayChg, chip, mode) {
+function analyze(sym, tf, pr, hi, lo, cost, ma5, ma10, ma20, rsi5, rsi10, rsiPrev, dif, macd9, macdCurr, macdPrev, vol, volPrev, dayChg, chip_d0, chip_d1, chip_d2, chip_d3, chip_d4, mode) {
   var range = hi - lo;
   var fibRet = range > 0 ? (pr - lo) / range : 0.5;
 
@@ -574,7 +583,7 @@ function analyze(sym, tf, pr, hi, lo, cost, ma5, ma10, ma20, rsi5, rsi10, rsiPre
   var scoreA = autoPrice === 'unknown' ? null : sScore(autoPrice);
   var scoreB = autoVol   === 'unknown' ? null : sScore(autoVol);
   var scoreC = autoMom   === 'unknown' ? null : sScore(autoMom);
-  var scoreD = chip      === 'unknown' ? null : sScore(chip);
+  var scoreD = autoChip  === 'unknown' ? null : sScore(autoChip);
 
   var tw = 0, ts2 = 0;
   if (scoreA !== null) { ts2 += scoreA * 40; tw += 40; }
@@ -598,14 +607,113 @@ function analyze(sym, tf, pr, hi, lo, cost, ma5, ma10, ma20, rsi5, rsi10, rsiPre
     structDesc = '多個維度同步惡化，R4強制規則啟動。大幅降低部位或全出。';
   }
 
-  var chipLabel = chip === 'good' ? '大戶持續買超' : chip === 'weak' ? '買超停滯轉弱' : chip === 'broken' ? '大戶轉賣破位' : '未判斷';
-  var chipEv = chip === 'good' ? ['大戶持續買超，籌碼健康'] : chip === 'weak' ? ['大戶買超停滯，注意籌碼'] : chip === 'broken' ? ['大戶轉賣破位，籌碼惡化'] : ['未填入，不計入評分'];
+  // D. 籌碼主力 自動判斷（逐日趨勢分析）
+  var autoChip = 'unknown'; var chipEv = [];
+  var chipDays = [chip_d0, chip_d1, chip_d2, chip_d3, chip_d4];
+  var validDays = chipDays.filter(function(v){ return !isNaN(v); });
+  var hasChipData = validDays.length >= 2;
+
+  if (hasChipData) {
+    // 統計買超/賣超天數（只用有填的天數）
+    var buyDays = 0, sellDays = 0, totalSum = 0;
+    validDays.forEach(function(v) {
+      if (v > 0) buyDays++;
+      else if (v < 0) sellDays++;
+      totalSum += v;
+    });
+
+    // 趨勢判斷：最近3日方向（d0最新，d1次新，d2再前）
+    var d0 = isNaN(chip_d0) ? null : chip_d0;
+    var d1 = isNaN(chip_d1) ? null : chip_d1;
+    var d2 = isNaN(chip_d2) ? null : chip_d2;
+
+    var chipTrend = 'neutral';
+    // 連買：最近2-3日都是買超
+    if (d0 !== null && d1 !== null && d0 > 0 && d1 > 0) {
+      chipTrend = d2 !== null && d2 > 0 ? 'strong_buy' : 'continue_buy';
+    }
+    // 連賣：最近2-3日都是賣超
+    else if (d0 !== null && d1 !== null && d0 < 0 && d1 < 0) {
+      chipTrend = d2 !== null && d2 < 0 ? 'strong_sell' : 'continue_sell';
+    }
+    // 由賣轉買：今日買，昨日賣
+    else if (d0 !== null && d1 !== null && d0 > 0 && d1 < 0) {
+      chipTrend = 'turn_buy';
+    }
+    // 由買轉賣：今日賣，昨日買
+    else if (d0 !== null && d1 !== null && d0 < 0 && d1 > 0) {
+      chipTrend = 'turn_sell';
+    }
+    // 震盪：多空交錯
+    else {
+      chipTrend = 'volatile';
+    }
+
+    // 趨勢說明
+    var trendLabels = {
+      strong_buy:    '連續' + (d2!==null&&d2>0?'3':'2') + '日買超，籌碼持續累積',
+      continue_buy:  '連續買超（昨今皆正），籌碼健康',
+      turn_buy:      '由賣轉買，籌碼開始回補',
+      turn_sell:     '由買轉賣，主力開始出貨，注意',
+      continue_sell: '連續賣超（昨今皆負），籌碼持續流出',
+      strong_sell:   '連續' + (d2!==null&&d2<0?'3':'2') + '日賣超，籌碼惡化',
+      volatile:      '買賣交錯震盪，方向不明確'
+    };
+    chipEv.push(trendLabels[chipTrend] || '方向不明');
+
+    // 今日細節
+    if (d0 !== null) chipEv.push('最新日合計：' + (d0 > 0 ? '+' : '') + d0 + '張');
+
+    // 近期統計
+    if (validDays.length >= 3) {
+      chipEv.push('近' + validDays.length + '日：買超' + buyDays + '天 / 賣超' + sellDays + '天，合計' + (totalSum > 0 ? '+' : '') + totalSum + '張');
+    }
+
+    // 評定
+    if (chipTrend === 'strong_buy' || chipTrend === 'continue_buy') {
+      autoChip = 'good';
+    } else if (chipTrend === 'turn_buy') {
+      autoChip = 'good';
+      chipEv.push('由空轉多，但需觀察是否持續');
+    } else if (chipTrend === 'volatile') {
+      autoChip = 'weak';
+    } else if (chipTrend === 'turn_sell') {
+      autoChip = 'weak';
+    } else if (chipTrend === 'continue_sell' || chipTrend === 'strong_sell') {
+      autoChip = 'broken';
+    }
+
+  } else if (validDays.length === 1) {
+    var d0only = chip_d0;
+    if (!isNaN(d0only)) {
+      if (d0only > 0) { autoChip = 'good'; chipEv.push('最新日買超' + d0only + '張（建議填入更多天數以判斷趨勢）'); }
+      else if (d0only < 0) { autoChip = 'broken'; chipEv.push('最新日賣超' + Math.abs(d0only) + '張（建議填入更多天數）'); }
+    }
+  } else {
+    autoChip = 'unknown';
+    chipEv.push('未填入三大法人數據，不計入評分');
+  }
+
+  // 籌碼趨勢標籤（用於顯示）
+  var chipTrendDisplay = {
+    strong_buy:    '連續買超',
+    continue_buy:  '連續買超',
+    turn_buy:      '由賣轉買',
+    volatile:      '震盪不定',
+    turn_sell:     '由買轉賣',
+    continue_sell: '連續賣超',
+    strong_sell:   '連續賣超',
+    neutral:       '數據不足'
+  };
+  var chipLabel = autoChip === 'unknown' ? '未填入' : (chipTrendDisplay[chipTrend] || sLabel[autoChip]);
+
+  var chipLabel = sLabel[autoChip] || autoChip;
 
   var structDetails = [
     {dim:'A. 價格結構', val:autoPrice, score:scoreA, weight:40, label:sLabel[autoPrice]||autoPrice, ev:priceEv},
     {dim:'B. 量能條件', val:autoVol,   score:scoreB, weight:25, label:sLabel[autoVol]||autoVol,     ev:volEv},
     {dim:'C. 動能條件', val:autoMom,   score:scoreC, weight:20, label:sLabel[autoMom]||autoMom,     ev:momEv},
-    {dim:'D. 籌碼主力', val:chip,      score:scoreD, weight:15, label:chipLabel,                    ev:chipEv}
+    {dim:'D. 籌碼主力', val:autoChip,  score:scoreD, weight:15, label:chipLabel,                    ev:chipEv}
   ];
 
   // Bias score
