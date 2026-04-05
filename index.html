@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
@@ -137,6 +136,7 @@ select{width:118px;text-align:center;}
       <button class="mode-btn" id="modeN" onclick="setMode('N')" style="flex:0.7">&#x2014; 未定</button>
     </div>
   </div>
+
   <div class="section">
     <div class="section-title">股票資訊</div>
     <div class="input-card">
@@ -148,6 +148,7 @@ select{width:118px;text-align:center;}
       <div class="input-row"><div class="input-label">持倉成本<small>選填，計算獲利%</small></div><input type="number" id="cost" placeholder="29.00" step="0.01"></div>
     </div>
   </div>
+
   <div class="section">
     <div class="section-title">均線</div>
     <div class="input-card">
@@ -156,6 +157,7 @@ select{width:118px;text-align:center;}
       <div class="input-row"><div class="input-label">MA20</div><input type="number" id="ma20" placeholder="30.01" step="0.01"></div>
     </div>
   </div>
+
   <div class="section">
     <div class="section-title">RSI 指標</div>
     <div class="input-card">
@@ -164,6 +166,7 @@ select{width:118px;text-align:center;}
       <div class="input-row"><div class="input-label">前期RSI(5)<small>動能計算用</small></div><input type="number" id="rsiPrev" placeholder="55" step="0.1" min="0" max="100"></div>
     </div>
   </div>
+
   <div class="section">
     <div class="section-title">MACD 指標</div>
     <div class="input-card">
@@ -173,6 +176,7 @@ select{width:118px;text-align:center;}
       <div class="input-row"><div class="input-label">前一根OSC柱<small>動能加速度用</small></div><input type="number" id="macdPrev" placeholder="-0.20" step="0.001"></div>
     </div>
   </div>
+
   <div class="section">
     <div class="section-title">成交量 &amp; 漲幅（選填）</div>
     <div class="input-card">
@@ -181,29 +185,46 @@ select{width:118px;text-align:center;}
       <div class="input-row"><div class="input-label">單日漲跌幅%<small>R3強制規則用</small></div><input type="number" id="dayChange" placeholder="2.5" step="0.1"></div>
     </div>
   </div>
+
   <div class="section">
     <div class="section-title">技術結構 A-D</div>
     <div class="input-card" style="padding:12px 14px">
-      <div style="font-size:12px;color:var(--accent);margin-bottom:6px">&#x1F916; A/B/C/D 全部系統自動判斷</div>
-      <div style="font-size:11px;color:var(--muted);line-height:1.7">根據填入的數值自動計算。D籌碼請填入三大法人近5日買賣數據。</div>
+      <div style="font-size:12px;color:var(--accent);margin-bottom:6px">&#x1F916; A 價格結構由波段高低點自動判斷，B/C/D 系統自動計算</div>
+      <div style="font-size:11px;color:var(--muted);line-height:1.7">請從K線圖找出最近兩個波段高點和低點填入，系統自動判斷結構狀態。</div>
     </div>
+
+    <div class="input-card">
+      <div style="padding:10px 14px 6px;font-size:10px;color:var(--muted);letter-spacing:1px">A. 波段高低點（從K線圖找）</div>
+      <div class="input-row"><div class="input-label">最近波段高點 SH1<small>最近一個swing high</small></div><input type="number" id="swingH1" placeholder="35.50" step="0.01"></div>
+      <div class="input-row"><div class="input-label">上一波段高點 SH2<small>前一個swing high</small></div><input type="number" id="swingH2" placeholder="32.50" step="0.01"></div>
+      <div class="input-row"><div class="input-label">最近波段低點 SL1<small>最近一個swing low</small></div><input type="number" id="swingL1" placeholder="28.10" step="0.01"></div>
+      <div class="input-row"><div class="input-label">上一波段低點 SL2<small>前一個swing low</small></div><input type="number" id="swingL2" placeholder="26.50" step="0.01"></div>
+      <div class="input-row"><div class="input-label">前一日收盤<small>昨日收盤價</small></div><input type="number" id="prevClose" placeholder="31.20" step="0.01"></div>
+    </div>
+
     <div class="input-card">
       <div style="padding:10px 14px 6px;font-size:10px;color:var(--muted);letter-spacing:1px">三大法人合計（張，買超填正數，賣超填負數）</div>
       <div class="input-row"><div class="input-label">今日／最新日<small>最新一日三大法人合計</small></div><input type="number" id="chip_d0" placeholder="922" step="1"></div>
       <div class="input-row"><div class="input-label">前1日<small>昨日合計</small></div><input type="number" id="chip_d1" placeholder="6173" step="1"></div>
-      <div class="input-row"><div class="input-label">前2日<small></small></div><input type="number" id="chip_d2" placeholder="177" step="1"></div>
+      <div class="input-row"><div class="input-label">前2日</div><input type="number" id="chip_d2" placeholder="177" step="1"></div>
       <div class="input-row"><div class="input-label">前3日<small>（選填）</small></div><input type="number" id="chip_d3" placeholder="5521" step="1"></div>
       <div class="input-row"><div class="input-label">前4日<small>（選填）</small></div><input type="number" id="chip_d4" placeholder="5459" step="1"></div>
     </div>
   </div>
+
   <div class="section">
     <div class="section-title">K線圖上傳（選填）</div>
     <div class="upload-area" id="uploadArea">
       <input type="file" accept="image/*" multiple onchange="handleImages(this)">
-      <div id="uploadContent"><div class="upload-icon">&#x1F5BC;&#xFE0F;</div><div class="upload-title">上傳K線截圖</div><div class="upload-hint">支援5分K到月K，有幾張傳幾張</div></div>
+      <div id="uploadContent">
+        <div class="upload-icon">&#x1F5BC;&#xFE0F;</div>
+        <div class="upload-title">上傳K線截圖</div>
+        <div class="upload-hint">支援5分K到月K，有幾張傳幾張</div>
+      </div>
       <div class="preview-grid" id="previewGrid" style="display:none"></div>
     </div>
   </div>
+
   <div class="section" style="padding-bottom:16px">
     <button class="analyze-btn" id="analyzeBtn" onclick="runAnalysis()">&#x26A1; 開始技術分析</button>
   </div>
@@ -294,11 +315,6 @@ function trendScore(t) {
   return m[t] || 0;
 }
 
-function trendText(t) {
-  var m = {down:'下跌 ↓','down-slow':'緩跌 ↘',sideways:'橫盤 →','up-slow':'緩升 ↗',up:'上漲 ↑'};
-  return m[t] || t;
-}
-
 function tflabel(tf) {
   var m = {'5m':'5分K','15m':'15分K','30m':'30分K','60m':'60分K','D':'日K','W':'週K','M':'月K'};
   return m[tf] || tf;
@@ -347,6 +363,11 @@ function runAnalysis() {
   var rsi5 = g('rsi5'), rsi10 = g('rsi10'), rsiPrev = g('rsiPrev');
   var dif = g('dif'), macd9 = g('macd9'), macdCurr = g('macdCurr'), macdPrev = g('macdPrev');
   var vol = g('volume'), volPrev = g('volumePrev'), dayChg = g('dayChange');
+  var swingH1 = g('swingH1');
+  var swingH2 = g('swingH2');
+  var swingL1 = g('swingL1');
+  var swingL2 = g('swingL2');
+  var prevClose = g('prevClose');
   var chip_d0 = g('chip_d0');
   var chip_d1 = g('chip_d1');
   var chip_d2 = g('chip_d2');
@@ -361,7 +382,7 @@ function runAnalysis() {
   btn.innerHTML = '<span class="spinner"></span>分析中...';
 
   setTimeout(function() {
-    var res = analyze(sym, tf, pr, hi, lo, cost, ma5, ma10, ma20, rsi5, rsi10, rsiPrev, dif, macd9, macdCurr, macdPrev, vol, volPrev, dayChg, chip_d0, chip_d1, chip_d2, chip_d3, chip_d4, mode);
+    var res = analyze(sym, tf, pr, hi, lo, cost, ma5, ma10, ma20, rsi5, rsi10, rsiPrev, dif, macd9, macdCurr, macdPrev, vol, volPrev, dayChg, chip_d0, chip_d1, chip_d2, chip_d3, chip_d4, mode, swingH1, swingH2, swingL1, swingL2, prevClose);
     renderResult(res);
     saveHistory(res);
     btn.disabled = false;
@@ -370,7 +391,7 @@ function runAnalysis() {
   }, 600);
 }
 
-function analyze(sym, tf, pr, hi, lo, cost, ma5, ma10, ma20, rsi5, rsi10, rsiPrev, dif, macd9, macdCurr, macdPrev, vol, volPrev, dayChg, chip_d0, chip_d1, chip_d2, chip_d3, chip_d4, mode) {
+function analyze(sym, tf, pr, hi, lo, cost, ma5, ma10, ma20, rsi5, rsi10, rsiPrev, dif, macd9, macdCurr, macdPrev, vol, volPrev, dayChg, chip_d0, chip_d1, chip_d2, chip_d3, chip_d4, mode, swingH1, swingH2, swingL1, swingL2, prevClose) {
   var range = hi - lo;
   var fibRet = range > 0 ? (pr - lo) / range : 0.5;
 
@@ -405,9 +426,13 @@ function analyze(sym, tf, pr, hi, lo, cost, ma5, ma10, ma20, rsi5, rsi10, rsiPre
     if (v > pr) sr.push({type:'R', price: v.toFixed(2), label: '費波 ' + k, strength: s});
     else        sr.push({type:'S', price: v.toFixed(2), label: '費波 ' + k, strength: s});
   }
+  if (!isNaN(swingH1)) sr.push({type:'R', price: swingH1.toFixed(2), label:'波段壓力 SH1', strength:'強'});
+  if (!isNaN(swingH2)) sr.push({type:'R', price: swingH2.toFixed(2), label:'波段壓力 SH2', strength:'中'});
+  if (!isNaN(swingL1)) sr.push({type:'S', price: swingL1.toFixed(2), label:'關鍵支撐 SL1', strength:'強'});
+  if (!isNaN(swingL2)) sr.push({type:'S', price: swingL2.toFixed(2), label:'前波支撐 SL2', strength:'中'});
   if (!isNaN(ma20)) { if (ma20 > pr) sr.push({type:'R', price: ma20.toFixed(2), label:'MA20 壓力', strength:'中'}); else sr.push({type:'S', price: ma20.toFixed(2), label:'MA20 支撐', strength:'強'}); }
   if (!isNaN(ma10) && ma10 > pr) sr.push({type:'R', price: ma10.toFixed(2), label:'MA10 壓力', strength:'弱'});
-  if (!isNaN(ma5)  && ma5  < pr) sr.push({type:'S', price: ma5.toFixed(2),  label:'MA5 支撐',  strength:'弱'});
+  if (!isNaN(ma5)  && ma5  < pr) sr.push({type:'S', price: ma5.toFixed(2), label:'MA5 支撐', strength:'弱'});
   sr.sort(function(a,b){ return parseFloat(b.price) - parseFloat(a.price); });
 
   // MA analysis
@@ -431,7 +456,7 @@ function analyze(sym, tf, pr, hi, lo, cost, ma5, ma10, ma20, rsi5, rsi10, rsiPre
     else                 rsiA.push({text:'RSI(5)=' + rsi5 + '，超賣區，反彈機會', type:'ok'});
   }
   if (!isNaN(rsi10)) {
-    if (rsi10 >= 70)     rsiA.push({text:'RSI(10)=' + rsi10 + '，中期超買', type:'caution'});
+    if (rsi10 >= 70)      rsiA.push({text:'RSI(10)=' + rsi10 + '，中期超買', type:'caution'});
     else if (rsi10 >= 50) rsiA.push({text:'RSI(10)=' + rsi10 + '，中期偏強', type:'ok'});
     else                  rsiA.push({text:'RSI(10)=' + rsi10 + '，中期偏弱', type:''});
   }
@@ -441,13 +466,14 @@ function analyze(sym, tf, pr, hi, lo, cost, ma5, ma10, ma20, rsi5, rsi10, rsiPre
   if (!isNaN(dif) && !isNaN(macd9)) {
     if (dif > 0 && macd9 > 0)      macdA.push({text:'MACD雙線零軸上，整體偏多', type:'ok'});
     else if (dif < 0 && macd9 < 0) macdA.push({text:'MACD雙線零軸下，整體偏空', type:'warn'});
-    else                            macdA.push({text:'MACD穿越零軸，趨勢轉折關鍵位', type:'caution'});
+    else                           macdA.push({text:'MACD穿越零軸，趨勢轉折關鍵位', type:'caution'});
     if (dif > macd9) macdA.push({text:'DIF>Signal，金叉多頭', type:'ok'});
     else             macdA.push({text:'DIF<Signal，死叉空頭', type:'warn'});
   }
 
   // Momentum
-  var momA = []; var momScore = 0;
+  var momA = []; 
+  var momScore = 0;
   if (!isNaN(macdCurr) && !isNaN(macdPrev)) {
     var acc = macdCurr - macdPrev;
     if (macdCurr > 0 && macdPrev <= 0) { momA.push({text:'MACD柱由負轉正，動能質變，多方開始主導', type:'ok'}); momScore += 2; }
@@ -474,36 +500,40 @@ function analyze(sym, tf, pr, hi, lo, cost, ma5, ma10, ma20, rsi5, rsi10, rsiPre
 
   // Volume
   var volA = [];
+  var autoVol = 'good';
   if (!isNaN(vol)) {
     if (!isNaN(volPrev) && volPrev > 0) {
       var vr = vol / volPrev;
       if (vr >= 1.8) {
-        if (curT === 'down' || curT === 'down-slow') volA.push({text:'爆量' + vr.toFixed(1) + '倍配合下跌，破壞訊號', type:'warn'});
+        if (curT === 'down' || curT === 'down-slow') { volA.push({text:'爆量' + vr.toFixed(1) + '倍配合下跌，破壞訊號', type:'warn'}); autoVol = 'broken'; }
         else volA.push({text:'放量' + vr.toFixed(1) + '倍配合上漲，量能充足', type:'ok'});
       } else if (vr > 1.2) {
         if (curT === 'up' || curT === 'up-slow') volA.push({text:'溫和放量+' + ((vr-1)*100).toFixed(0) + '%，上漲有量', type:'ok'});
-        else volA.push({text:'放量但方向向下，需注意', type:'caution'});
+        else { volA.push({text:'放量但方向向下，需注意', type:'caution'}); if (autoVol === 'good') autoVol = 'weak'; }
       } else if (vr < 0.5) {
-        if (curT === 'up' || curT === 'up-slow') volA.push({text:'成交量萎縮至前期' + (vr*100).toFixed(0) + '%，上漲無量', type:'caution'});
+        if (curT === 'up' || curT === 'up-slow') { volA.push({text:'成交量萎縮至前期' + (vr*100).toFixed(0) + '%，上漲無量', type:'caution'}); autoVol = 'weak'; }
         else volA.push({text:'縮量回檔，正常整理', type:''});
       } else {
         volA.push({text:'成交量持平（' + (vr*100).toFixed(0) + '%），無異常', type:''});
       }
-      if (!isNaN(dayChg) && dayChg < -3 && vr >= 1.5) volA.push({text:'大跌+爆量，賣壓沉重', type:'warn'});
+      if (!isNaN(dayChg) && dayChg < -3 && vr >= 1.5) { volA.push({text:'大跌+爆量，賣壓沉重', type:'warn'}); autoVol = 'broken'; }
     } else {
-      if (vol < 10) volA.push({text:'成交量極度萎縮(' + vol + 'M)，缺乏動能', type:'caution'});
+      if (vol < 10) { volA.push({text:'成交量極度萎縮(' + vol + 'M)，缺乏動能', type:'caution'}); autoVol = 'weak'; }
       else volA.push({text:'成交量' + vol + 'M（無前期基準）', type:''});
     }
+  } else {
+    autoVol = 'unknown';
+    volA.push({text:'未填成交量', type:''});
   }
 
   // Rules
   var rules = [];
   if (!isNaN(cost) && cost > 0) {
     var pct = (pr - cost) / cost * 100;
-    if (pct >= 10)      rules.push({rule:'R1', level:'warn',    text:'獲利+' + pct.toFixed(1) + '% 強制R1：應先賣1/2'});
-    else if (pct >= 8)  rules.push({rule:'R1', level:'warn',    text:'獲利+' + pct.toFixed(1) + '% 強制R1：應先賣1/2'});
+    if (pct >= 10)      rules.push({rule:'R1', level:'warn', text:'獲利+' + pct.toFixed(1) + '% 強制R1：應先賣1/2'});
+    else if (pct >= 8)  rules.push({rule:'R1', level:'warn', text:'獲利+' + pct.toFixed(1) + '% 強制R1：應先賣1/2'});
     else if (pct >= 5)  rules.push({rule:'R1觀察', level:'caution', text:'獲利+' + pct.toFixed(1) + '%，接近R1觸發點(8%)'});
-    else if (pct < -8)  rules.push({rule:'R4警示', level:'warn',    text:'虧損' + pct.toFixed(1) + '%，接近R4止血區間'});
+    else if (pct < -8)  rules.push({rule:'R4警示', level:'warn', text:'虧損' + pct.toFixed(1) + '%，接近R4止血區間'});
   }
   if (!isNaN(rsi5) && rsi5 >= 85) rules.push({rule:'R2', level:'warn', text:'RSI(5)=' + rsi5 + ' >= 85，強制R2：應先賣1/2'});
   else if (!isNaN(rsi5) && rsi5 >= 80) rules.push({rule:'R2觀察', level:'caution', text:'RSI(5)=' + rsi5 + '，接近R2(85)，準備減碼'});
@@ -518,45 +548,90 @@ function analyze(sym, tf, pr, hi, lo, cost, ma5, ma10, ma20, rsi5, rsi10, rsiPre
   if (curT === 'up-slow' || curT === 'up') p1c.push('現週期轉升');
   if (p1c.length >= 2) rules.push({rule:'P1', level:'ok', text:'低檔強攻條件成立（' + p1c.join('、') + '），可建試單30%'});
 
-  // Structure scoring
-  // A. Price
-  var autoPrice = 'good'; var priceEv = [];
-  if (!isNaN(pr) && !isNaN(hi) && !isNaN(lo)) {
-    var retrace = (hi - pr) / (hi - lo);
-    if (retrace > 0.618) { autoPrice = 'broken'; priceEv.push('從高點回撤' + (retrace*100).toFixed(0) + '%，跌破61.8%'); }
-    else if (retrace > 0.382) { autoPrice = 'weak'; priceEv.push('從高點回撤' + (retrace*100).toFixed(0) + '%，進入38-62%區間'); }
-    else { priceEv.push('從高點回撤僅' + (retrace*100).toFixed(0) + '%，結構完整'); }
+  // A. 價格結構判斷（波段高低點）
+  var autoPrice = 'unknown';
+  var priceEv = [];
+  var hasSwing = !isNaN(swingH1) && !isNaN(swingL1);
+  var trendStruct = 'unknown';
+  var keySupport = NaN;
+  var keyResistance = NaN;
+  var breakdownConfirmed = false;
+  var breakoutConfirmed = false;
+
+  if (hasSwing) {
+    keySupport = swingL1;
+    keyResistance = swingH1;
+
+    var hasTrend = !isNaN(swingH2) && !isNaN(swingL2);
+    if (hasTrend) {
+      var higherHigh = swingH1 > swingH2;
+      var higherLow  = swingL1 > swingL2;
+      if (higherHigh && higherLow) trendStruct = 'uptrend';
+      else if (!higherHigh && !higherLow) trendStruct = 'downtrend';
+      else if (!higherHigh && higherLow) trendStruct = 'weakening';
+      else trendStruct = 'unstable';
+
+      var trendLabel = {
+        uptrend:'上升結構(HH+HL)',
+        downtrend:'下降結構(LH+LL)',
+        weakening:'結構轉弱(只有HL)',
+        unstable:'結構不穩(只有HH)'
+      };
+      priceEv.push(trendLabel[trendStruct]);
+    }
+
+    var supportHold = pr >= keySupport;
+    if (supportHold) priceEv.push('收盤' + pr + '站上關鍵支撐' + keySupport);
+    else priceEv.push('收盤' + pr + '跌破關鍵支撐' + keySupport);
+
+    var hasPrev = !isNaN(prevClose);
+    var breakdown = pr < keySupport;
+    breakdownConfirmed = hasPrev ? (pr < keySupport && prevClose < keySupport) : breakdown;
+    breakoutConfirmed  = hasPrev ? (pr > keyResistance && prevClose <= keyResistance && !isNaN(vol) && !isNaN(volPrev) && volPrev > 0 && vol/volPrev >= 1.5) : (pr > keyResistance);
+
+    if (breakoutConfirmed) priceEv.push('有效突破壓力' + keyResistance + '（收盤+放量）');
+    else if (pr > keyResistance) priceEv.push('站上壓力' + keyResistance + '（待確認放量）');
+
+    if (breakdownConfirmed) priceEv.push('連續收盤跌破支撐，結構破壞確認');
+    else if (breakdown) priceEv.push('今日跌破支撐，待明日確認');
+
     if (hma) {
       if (pr > ma5 && pr > ma10 && pr > ma20) priceEv.push('站上所有均線');
-      else if (pr < ma5 && pr < ma10 && pr < ma20) { if (autoPrice === 'good') autoPrice = 'broken'; priceEv.push('跌破所有均線'); }
-      else if (pr < ma20) { if (autoPrice === 'good') autoPrice = 'weak'; priceEv.push('跌破MA20'); }
+      else if (pr < ma20) priceEv.push('跌破MA20');
     }
-    if (curT === 'down' || majT === 'down') { if (autoPrice === 'good') autoPrice = 'weak'; priceEv.push('大/現週期向下'); }
-    if (curT === 'up' && midT === 'up') priceEv.push('中現週期同步向上');
-  } else { autoPrice = 'unknown'; priceEv.push('數據不足'); }
 
-  // B. Volume
-  var autoVol = 'good'; var volEv = [];
-  if (!isNaN(vol) && !isNaN(volPrev) && volPrev > 0) {
-    var vr2 = vol / volPrev;
-    if (vr2 >= 1.8) {
-      if (curT === 'down' || curT === 'down-slow') { autoVol = 'broken'; volEv.push('爆量配合下跌，破壞訊號'); }
-      else volEv.push('放量' + vr2.toFixed(1) + '倍，量能充足');
-    } else if (vr2 > 1.2) {
-      if (curT === 'up' || curT === 'up-slow') volEv.push('溫和放量，上漲有量');
-      else { if (autoVol === 'good') autoVol = 'weak'; volEv.push('放量但方向向下'); }
-    } else if (vr2 < 0.5) {
-      if (curT === 'up' || curT === 'up-slow') { autoVol = 'weak'; volEv.push('縮量上漲，動能不足'); }
-      else volEv.push('縮量回檔，正常整理');
-    } else volEv.push('成交量持平，無異常');
-    if (!isNaN(dayChg) && dayChg < -3 && vr2 >= 1.5) { autoVol = 'broken'; volEv.push('大跌+爆量，賣壓沉重'); }
-  } else if (!isNaN(vol)) {
-    if (vol < 10) { autoVol = 'weak'; volEv.push('成交量極度萎縮'); }
-    else volEv.push('成交量' + vol + 'M（無前期基準）');
-  } else { autoVol = 'unknown'; volEv.push('未填成交量'); }
+    if (breakdownConfirmed) {
+      autoPrice = 'broken';
+    } else if (breakdown) {
+      autoPrice = 'weak';
+    } else if (supportHold) {
+      if (trendStruct === 'downtrend') {
+        autoPrice = 'weak';
+      } else if (trendStruct === 'weakening' || trendStruct === 'unstable') {
+        autoPrice = 'weak';
+      } else if (trendStruct === 'uptrend' || trendStruct === 'unknown') {
+        if (!isNaN(ma5) && pr < ma5) autoPrice = 'weak';
+        else autoPrice = 'good';
+      } else {
+        autoPrice = 'good';
+      }
+    } else {
+      autoPrice = 'weak';
+    }
+  } else {
+    if (hma) {
+      if (pr > ma5 && pr > ma10 && pr > ma20) { autoPrice = 'good'; priceEv.push('站上所有均線（建議填入波段高低點以精確判斷）'); }
+      else if (pr < ma20) { autoPrice = 'weak'; priceEv.push('跌破MA20（建議填入波段高低點以精確判斷）'); }
+      else { autoPrice = 'weak'; priceEv.push('均線混雜（建議填入波段高低點以精確判斷）'); }
+    } else {
+      autoPrice = 'unknown';
+      priceEv.push('請填入波段高低點（SH1/SL1）以啟用A判斷');
+    }
+  }
 
   // C. Momentum
-  var autoMom = 'good'; var momEv = [];
+  var autoMom = 'good';
+  var momEv = [];
   if (!isNaN(dif) && !isNaN(macd9)) {
     if (dif > 0 && dif > macd9) momEv.push('MACD金叉零軸上');
     else if (dif > 0 && dif < macd9) { if (autoMom === 'good') autoMom = 'weak'; momEv.push('MACD零軸上但死叉'); }
@@ -577,6 +652,74 @@ function analyze(sym, tf, pr, hi, lo, cost, ma5, ma10, ma20, rsi5, rsi10, rsiPre
   }
   if (autoMom === 'good' && momEv.length === 0) { autoMom = 'unknown'; momEv.push('未填MACD/RSI'); }
 
+  // D. 籌碼主力（先算，之後再評分）
+  var autoChip = 'unknown';
+  var chipEv = [];
+  var chipDays = [chip_d0, chip_d1, chip_d2, chip_d3, chip_d4];
+  var validDays = chipDays.filter(function(v){ return !isNaN(v); });
+  var chipTrend = 'neutral';
+
+  if (validDays.length >= 2) {
+    var buyDays = 0, sellDays = 0, totalSum = 0;
+    validDays.forEach(function(v) {
+      if (v > 0) buyDays++;
+      else if (v < 0) sellDays++;
+      totalSum += v;
+    });
+
+    var d0 = isNaN(chip_d0) ? null : chip_d0;
+    var d1 = isNaN(chip_d1) ? null : chip_d1;
+    var d2 = isNaN(chip_d2) ? null : chip_d2;
+
+    if (d0 !== null && d1 !== null && d0 > 0 && d1 > 0) {
+      chipTrend = d2 !== null && d2 > 0 ? 'strong_buy' : 'continue_buy';
+    } else if (d0 !== null && d1 !== null && d0 < 0 && d1 < 0) {
+      chipTrend = d2 !== null && d2 < 0 ? 'strong_sell' : 'continue_sell';
+    } else if (d0 !== null && d1 !== null && d0 > 0 && d1 < 0) {
+      chipTrend = 'turn_buy';
+    } else if (d0 !== null && d1 !== null && d0 < 0 && d1 > 0) {
+      chipTrend = 'turn_sell';
+    } else {
+      chipTrend = 'volatile';
+    }
+
+    var trendLabels = {
+      strong_buy:'連續' + (d2 !== null && d2 > 0 ? '3' : '2') + '日買超，籌碼持續累積',
+      continue_buy:'連續買超（昨今皆正），籌碼健康',
+      turn_buy:'由賣轉買，籌碼開始回補',
+      turn_sell:'由買轉賣，主力開始出貨，注意',
+      continue_sell:'連續賣超（昨今皆負），籌碼持續流出',
+      strong_sell:'連續' + (d2 !== null && d2 < 0 ? '3' : '2') + '日賣超，籌碼惡化',
+      volatile:'買賣交錯震盪，方向不明確'
+    };
+    chipEv.push(trendLabels[chipTrend] || '方向不明');
+    if (d0 !== null) chipEv.push('最新日合計：' + (d0 > 0 ? '+' : '') + d0 + '張');
+    if (validDays.length >= 3) chipEv.push('近' + validDays.length + '日：買超' + buyDays + '天 / 賣超' + sellDays + '天，合計' + (totalSum > 0 ? '+' : '') + totalSum + '張');
+
+    if (chipTrend === 'strong_buy' || chipTrend === 'continue_buy') {
+      autoChip = 'good';
+    } else if (chipTrend === 'turn_buy') {
+      autoChip = 'good';
+      chipEv.push('由空轉多，但需觀察是否持續');
+    } else if (chipTrend === 'volatile') {
+      autoChip = 'weak';
+    } else if (chipTrend === 'turn_sell') {
+      autoChip = 'weak';
+    } else if (chipTrend === 'continue_sell' || chipTrend === 'strong_sell') {
+      autoChip = 'broken';
+    }
+  } else if (validDays.length === 1) {
+    var d0only = chip_d0;
+    if (!isNaN(d0only)) {
+      if (d0only > 0) { autoChip = 'good'; chipEv.push('最新日買超' + d0only + '張（建議填入更多天數以判斷趨勢）'); }
+      else if (d0only < 0) { autoChip = 'broken'; chipEv.push('最新日賣超' + Math.abs(d0only) + '張（建議填入更多天數）'); }
+    }
+  } else {
+    autoChip = 'unknown';
+    chipEv.push('未填入三大法人數據，不計入評分');
+  }
+
+  // 先算完 A/B/C/D，現在才評分
   function sScore(v) { return v === 'good' ? 100 : v === 'weak' ? 40 : v === 'broken' ? 0 : 50; }
   var sLabel = {good:'良好', weak:'轉弱', broken:'破壞', unknown:'數據不足'};
 
@@ -607,121 +750,31 @@ function analyze(sym, tf, pr, hi, lo, cost, ma5, ma10, ma20, rsi5, rsi10, rsiPre
     structDesc = '多個維度同步惡化，R4強制規則啟動。大幅降低部位或全出。';
   }
 
-  // D. 籌碼主力 自動判斷（逐日趨勢分析）
-  var autoChip = 'unknown'; var chipEv = [];
-  var chipDays = [chip_d0, chip_d1, chip_d2, chip_d3, chip_d4];
-  var validDays = chipDays.filter(function(v){ return !isNaN(v); });
-  var hasChipData = validDays.length >= 2;
-
-  if (hasChipData) {
-    // 統計買超/賣超天數（只用有填的天數）
-    var buyDays = 0, sellDays = 0, totalSum = 0;
-    validDays.forEach(function(v) {
-      if (v > 0) buyDays++;
-      else if (v < 0) sellDays++;
-      totalSum += v;
-    });
-
-    // 趨勢判斷：最近3日方向（d0最新，d1次新，d2再前）
-    var d0 = isNaN(chip_d0) ? null : chip_d0;
-    var d1 = isNaN(chip_d1) ? null : chip_d1;
-    var d2 = isNaN(chip_d2) ? null : chip_d2;
-
-    var chipTrend = 'neutral';
-    // 連買：最近2-3日都是買超
-    if (d0 !== null && d1 !== null && d0 > 0 && d1 > 0) {
-      chipTrend = d2 !== null && d2 > 0 ? 'strong_buy' : 'continue_buy';
-    }
-    // 連賣：最近2-3日都是賣超
-    else if (d0 !== null && d1 !== null && d0 < 0 && d1 < 0) {
-      chipTrend = d2 !== null && d2 < 0 ? 'strong_sell' : 'continue_sell';
-    }
-    // 由賣轉買：今日買，昨日賣
-    else if (d0 !== null && d1 !== null && d0 > 0 && d1 < 0) {
-      chipTrend = 'turn_buy';
-    }
-    // 由買轉賣：今日賣，昨日買
-    else if (d0 !== null && d1 !== null && d0 < 0 && d1 > 0) {
-      chipTrend = 'turn_sell';
-    }
-    // 震盪：多空交錯
-    else {
-      chipTrend = 'volatile';
-    }
-
-    // 趨勢說明
-    var trendLabels = {
-      strong_buy:    '連續' + (d2!==null&&d2>0?'3':'2') + '日買超，籌碼持續累積',
-      continue_buy:  '連續買超（昨今皆正），籌碼健康',
-      turn_buy:      '由賣轉買，籌碼開始回補',
-      turn_sell:     '由買轉賣，主力開始出貨，注意',
-      continue_sell: '連續賣超（昨今皆負），籌碼持續流出',
-      strong_sell:   '連續' + (d2!==null&&d2<0?'3':'2') + '日賣超，籌碼惡化',
-      volatile:      '買賣交錯震盪，方向不明確'
-    };
-    chipEv.push(trendLabels[chipTrend] || '方向不明');
-
-    // 今日細節
-    if (d0 !== null) chipEv.push('最新日合計：' + (d0 > 0 ? '+' : '') + d0 + '張');
-
-    // 近期統計
-    if (validDays.length >= 3) {
-      chipEv.push('近' + validDays.length + '日：買超' + buyDays + '天 / 賣超' + sellDays + '天，合計' + (totalSum > 0 ? '+' : '') + totalSum + '張');
-    }
-
-    // 評定
-    if (chipTrend === 'strong_buy' || chipTrend === 'continue_buy') {
-      autoChip = 'good';
-    } else if (chipTrend === 'turn_buy') {
-      autoChip = 'good';
-      chipEv.push('由空轉多，但需觀察是否持續');
-    } else if (chipTrend === 'volatile') {
-      autoChip = 'weak';
-    } else if (chipTrend === 'turn_sell') {
-      autoChip = 'weak';
-    } else if (chipTrend === 'continue_sell' || chipTrend === 'strong_sell') {
-      autoChip = 'broken';
-    }
-
-  } else if (validDays.length === 1) {
-    var d0only = chip_d0;
-    if (!isNaN(d0only)) {
-      if (d0only > 0) { autoChip = 'good'; chipEv.push('最新日買超' + d0only + '張（建議填入更多天數以判斷趨勢）'); }
-      else if (d0only < 0) { autoChip = 'broken'; chipEv.push('最新日賣超' + Math.abs(d0only) + '張（建議填入更多天數）'); }
-    }
-  } else {
-    autoChip = 'unknown';
-    chipEv.push('未填入三大法人數據，不計入評分');
-  }
-
-  // 籌碼趨勢標籤（用於顯示）
   var chipTrendDisplay = {
-    strong_buy:    '連續買超',
-    continue_buy:  '連續買超',
-    turn_buy:      '由賣轉買',
-    volatile:      '震盪不定',
-    turn_sell:     '由買轉賣',
-    continue_sell: '連續賣超',
-    strong_sell:   '連續賣超',
-    neutral:       '數據不足'
+    strong_buy:'連續買超',
+    continue_buy:'連續買超',
+    turn_buy:'由賣轉買',
+    volatile:'震盪不定',
+    turn_sell:'由買轉賣',
+    continue_sell:'連續賣超',
+    strong_sell:'連續賣超',
+    neutral:'數據不足'
   };
   var chipLabel = autoChip === 'unknown' ? '未填入' : (chipTrendDisplay[chipTrend] || sLabel[autoChip]);
 
-  var chipLabel = sLabel[autoChip] || autoChip;
-
   var structDetails = [
     {dim:'A. 價格結構', val:autoPrice, score:scoreA, weight:40, label:sLabel[autoPrice]||autoPrice, ev:priceEv},
-    {dim:'B. 量能條件', val:autoVol,   score:scoreB, weight:25, label:sLabel[autoVol]||autoVol,     ev:volEv},
-    {dim:'C. 動能條件', val:autoMom,   score:scoreC, weight:20, label:sLabel[autoMom]||autoMom,     ev:momEv},
-    {dim:'D. 籌碼主力', val:autoChip,  score:scoreD, weight:15, label:chipLabel,                    ev:chipEv}
+    {dim:'B. 量能條件', val:autoVol,   score:scoreB, weight:25, label:sLabel[autoVol]||autoVol, ev:volA.map(function(x){ return x.text; })},
+    {dim:'C. 動能條件', val:autoMom,   score:scoreC, weight:20, label:sLabel[autoMom]||autoMom, ev:momEv},
+    {dim:'D. 籌碼主力', val:autoChip,  score:scoreD, weight:15, label:chipLabel, ev:chipEv}
   ];
 
   // Bias score
   var bs = 50;
   bs += trendScore(majT)*8 + trendScore(midT)*6 + trendScore(curT)*10;
-  if (hma) { if (ma5>ma10) bs+=4; if (ma10>ma20) bs+=4; if (pr>ma20) bs+=4; }
-  if (!isNaN(rsi5)) { if (rsi5>60) bs+=5; else if (rsi5<40) bs-=5; }
-  if (!isNaN(dif)) { if (dif>0) bs+=3; if (dif>macd9) bs+=3; }
+  if (hma) { if (ma5 > ma10) bs += 4; if (ma10 > ma20) bs += 4; if (pr > ma20) bs += 4; }
+  if (!isNaN(rsi5)) { if (rsi5 > 60) bs += 5; else if (rsi5 < 40) bs -= 5; }
+  if (!isNaN(dif)) { if (dif > 0) bs += 3; if (dif > macd9) bs += 3; }
   bs += momScore * 3;
   bs = Math.max(5, Math.min(95, bs));
   var bias = bs >= 58 ? 'BULL' : bs <= 42 ? 'BEAR' : 'NEUTRAL';
@@ -734,15 +787,15 @@ function analyze(sym, tf, pr, hi, lo, cost, ma5, ma10, ma20, rsi5, rsi10, rsiPre
   else if (fr < 0.5) pat.push({text:'反彈' + (fr*100).toFixed(0) + '%，進入38.2%壓力區', type:'caution'});
   else if (fr < 0.7) pat.push({text:'強勢反彈' + (fr*100).toFixed(0) + '%，觀察是否反轉', type:'ok'});
   else               pat.push({text:'反彈幅度大，接近前高，評估突破或雙頂', type:'caution'});
-  if (hma && ma5>ma10 && ma10>ma20 && pr>ma5) pat.push({text:'均線多頭排列且站上所有均線，主升段特徵', type:'ok'});
-  if (hma && ma5<ma10 && ma10<ma20) pat.push({text:'均線空頭排列，跌浪中反彈需謹慎', type:'warn'});
+  if (hma && ma5 > ma10 && ma10 > ma20 && pr > ma5) pat.push({text:'均線多頭排列且站上所有均線，偏多結構特徵', type:'ok'});
+  if (hma && ma5 < ma10 && ma10 < ma20) pat.push({text:'均線空頭排列，跌浪中反彈需謹慎', type:'warn'});
 
   var wave = [];
   if (majT === 'down' && (midT === 'sideways' || midT === 'up-slow') && (curT === 'up-slow' || curT === 'up')) {
     wave.push({text:'多框架：大跌後底部反彈（ABC修正末段或第5浪後）', type:''});
     wave.push({text:'反彈目標：23.6%=' + fib['23.6%'].toFixed(2) + '，38.2%=' + fib['38.2%'].toFixed(2), type:''});
   } else if (majT === 'up' && midT === 'up' && curT === 'up') {
-    wave.push({text:'三框架同步向上，主升浪第3浪，動能最強', type:'ok'});
+    wave.push({text:'三框架同步向上，動能最強', type:'ok'});
   } else {
     wave.push({text:'趨勢方向混雜，等待方向明確後再操作', type:'caution'});
   }
@@ -754,7 +807,7 @@ function analyze(sym, tf, pr, hi, lo, cost, ma5, ma10, ma20, rsi5, rsi10, rsiPre
     for (var i = 0; i < sr.length; i++) { if (sr[i].type === 'R') { r1 = sr[i]; break; } }
     if (r1) sig.push({text:'第一目標：' + r1.price + '（' + r1.label + '）', type:''});
     var s1 = null;
-    for (var i = 0; i < sr.length; i++) { if (sr[i].type === 'S') { s1 = sr[i]; break; } }
+    for (var j = 0; j < sr.length; j++) { if (sr[j].type === 'S') { s1 = sr[j]; break; } }
     if (s1) sig.push({text:'止損：跌破' + s1.price + '出場', type:'caution'});
   } else if (bias === 'BEAR') {
     sig.push({text:'整體偏空，不宜做多，等底部確認', type:'warn'});
@@ -769,6 +822,31 @@ function analyze(sym, tf, pr, hi, lo, cost, ma5, ma10, ma20, rsi5, rsi10, rsiPre
   if (mode === 'B') risk.push({text:'B模式禁止攤平虧損股', type:'caution'});
   risk.push({text:'嚴守止損' + lo + '，跌破立即出場（R4）', type:'warn'});
   risk.push({text:'本分析為技術參考，不構成投資建議', type:''});
+
+  // 階段判斷
+  var stageState = '整理中';
+  var actionHint = 'observe';
+  if (hasSwing) {
+    var inUptrend = (trendStruct === 'uptrend');
+    var nearBottom = !isNaN(swingL1) && pr <= swingL1 * 1.08;
+    var nearBreakout = !isNaN(swingH1) && pr >= swingH1 * 0.97;
+    if (autoPrice === 'broken') {
+      stageState = '出貨/跌破段'; actionHint = 'reduce';
+    } else if (nearBottom && autoPrice !== 'broken') {
+      stageState = '底部反彈'; actionHint = 'observe';
+    } else if (inUptrend && pr > (isNaN(ma20) ? pr : ma20)) {
+      if (nearBreakout) { stageState = '突破段'; actionHint = 'add_on_breakout'; }
+      else { stageState = '初升段'; actionHint = 'hold'; }
+    } else if (autoPrice === 'weak') {
+      stageState = '高檔整理/轉弱'; actionHint = 'observe';
+    } else {
+      stageState = '盤整中'; actionHint = 'observe';
+    }
+  } else {
+    if (bias === 'BULL') { stageState = '偏多'; actionHint = 'hold'; }
+    else if (bias === 'BEAR') { stageState = '偏空'; actionHint = 'reduce'; }
+    else { stageState = '中立'; actionHint = 'observe'; }
+  }
 
   var tl = {down:'下跌','down-slow':'緩跌',sideways:'橫盤','up-slow':'緩升',up:'上漲'};
   var ctx = tfctx(tf);
@@ -787,7 +865,9 @@ function analyze(sym, tf, pr, hi, lo, cost, ma5, ma10, ma20, rsi5, rsi10, rsiPre
     majT:majT, midT:midT, curT:curT, mode:mode, trendNote:trendNote,
     structClass:structClass, structTitle:structTitle, structDesc:structDesc,
     structScore:structScore, structDetails:structDetails,
-    timestamp: new Date().toLocaleString('zh-TW')
+    stageState:stageState, actionHint:actionHint,
+    swingH1:swingH1, swingH2:swingH2, swingL1:swingL1, swingL2:swingL2,
+    timestamp:new Date().toLocaleString('zh-TW')
   };
 }
 
@@ -833,13 +913,12 @@ function renderResult(d) {
 
   var ctx = tfctx(d.tf);
   var ttMap = {down:'下跌 ↓','down-slow':'緩跌 ↘',sideways:'橫盤 →','up-slow':'緩升 ↗',up:'上漲 ↑'};
-  var bc = d.bias==='BULL'?'bias-bull':d.bias==='BEAR'?'bias-bear':'bias-neutral';
-  var btxt = d.bias==='BULL'?'📈 看多':d.bias==='BEAR'?'📉 看空':'➡️ 中立';
-  var bc2 = d.bias==='BULL'?'var(--green)':d.bias==='BEAR'?'var(--red)':'var(--gold)';
-  var modeC = d.mode==='A'?'var(--green)':d.mode==='B'?'var(--gold)':'var(--muted)';
-  var modeT = d.mode==='A'?'🎯 A模式':d.mode==='B'?'🛡️ B模式':'— 未定';
+  var bc = d.bias === 'BULL' ? 'bias-bull' : d.bias === 'BEAR' ? 'bias-bear' : 'bias-neutral';
+  var btxt = d.bias === 'BULL' ? '📈 看多' : d.bias === 'BEAR' ? '📉 看空' : '➡️ 中立';
+  var bc2 = d.bias === 'BULL' ? 'var(--green)' : d.bias === 'BEAR' ? 'var(--red)' : 'var(--gold)';
+  var modeC = d.mode === 'A' ? 'var(--green)' : d.mode === 'B' ? 'var(--gold)' : 'var(--muted)';
+  var modeT = d.mode === 'A' ? '🎯 A模式' : d.mode === 'B' ? '🛡️ B模式' : '— 未定';
 
-  // Header
   var hdr = mkEl('div', 'result-header');
   hdr.innerHTML = '<div class="ticker">' + d.sym + '</div>'
     + '<div class="bias-badge ' + bc + '">' + btxt + '</div>'
@@ -847,15 +926,46 @@ function renderResult(d) {
     + '<div class="tf-badge" style="color:' + modeC + '">' + modeT + '</div>';
   wrap.appendChild(hdr);
 
-  // Score bar
   var sbw = mkEl('div', 'score-bar-wrap');
   sbw.innerHTML = '<div class="score-row"><span class="score-label">多空評分</span><span class="score-val" style="color:' + bc2 + '">' + d.bs.toFixed(0) + ' / 100</span></div>'
     + '<div class="bar-track"><div class="bar-fill" id="barFill" style="width:0%;background:' + bc2 + '"></div></div>'
     + '<div class="score-row" style="margin-top:7px;margin-bottom:0"><span class="score-label">現價 ' + d.pr + '</span><span class="score-label">高 ' + d.hi + ' / 低 ' + d.lo + '</span></div>';
   wrap.appendChild(sbw);
 
-  // Structure verdict
-  var svcColor = d.structClass==='good'?'var(--green)':d.structClass==='weak'?'var(--gold)':'var(--red)';
+  var aColor = {hold:'var(--green)', observe:'var(--gold)', reduce:'var(--red)', add_on_breakout:'var(--accent)'};
+  var aLabel = {hold:'持有續抱', observe:'觀察等待', reduce:'降低部位', add_on_breakout:'突破加碼'};
+  var aIcon  = {hold:'✅', observe:'👁️', reduce:'⚠️', add_on_breakout:'🚀'};
+
+  var stageCard = mkEl('div', '');
+  stageCard.style.cssText = 'margin:0 14px 10px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;display:flex;align-items:center;gap:12px';
+
+  var stageLeft = mkEl('div', '');
+  stageLeft.style.cssText = 'flex:1';
+  var stageLbl = mkEl('div', '');
+  stageLbl.style.cssText = 'font-size:10px;color:var(--muted);font-family:DM Mono,monospace;margin-bottom:4px';
+  stageLbl.textContent = '階段判斷';
+  var stageVal = mkEl('div', '');
+  stageVal.style.cssText = 'font-size:15px;font-weight:700;color:var(--text)';
+  stageVal.textContent = d.stageState || '整理中';
+  stageLeft.appendChild(stageLbl);
+  stageLeft.appendChild(stageVal);
+
+  var actionRight = mkEl('div', '');
+  actionRight.style.cssText = 'text-align:center;background:var(--card2);border-radius:10px;padding:8px 14px;border:1px solid var(--border)';
+  var actionIcon = mkEl('div', '');
+  actionIcon.style.cssText = 'font-size:20px;margin-bottom:2px';
+  actionIcon.textContent = aIcon[d.actionHint] || '👁️';
+  var actionLbl2 = mkEl('div', '');
+  actionLbl2.style.cssText = 'font-size:12px;font-weight:700;color:' + (aColor[d.actionHint] || 'var(--gold)');
+  actionLbl2.textContent = aLabel[d.actionHint] || '觀察等待';
+  actionRight.appendChild(actionIcon);
+  actionRight.appendChild(actionLbl2);
+
+  stageCard.appendChild(stageLeft);
+  stageCard.appendChild(actionRight);
+  wrap.appendChild(stageCard);
+
+  var svcColor = d.structClass === 'good' ? 'var(--green)' : d.structClass === 'weak' ? 'var(--gold)' : 'var(--red)';
   var sv = mkEl('div', 'struct-verdict ' + d.structClass);
   var svt = mkEl('div', 'struct-verdict-title');
   svt.style.color = svcColor;
@@ -865,9 +975,10 @@ function renderResult(d) {
   svd.style.cssText = 'font-size:12px;color:var(--text);line-height:1.6;margin-bottom:10px';
   svd.textContent = d.structDesc;
   sv.appendChild(svd);
+
   var sbars = mkEl('div', 'struct-bars');
   (d.structDetails || []).forEach(function(s) {
-    var col = s.val==='good'?'var(--green)':s.val==='weak'?'var(--gold)':s.val==='broken'?'var(--red)':'var(--muted)';
+    var col = s.val === 'good' ? 'var(--green)' : s.val === 'weak' ? 'var(--gold)' : s.val === 'broken' ? 'var(--red)' : 'var(--muted)';
     var pct = s.score !== null ? s.score : 50;
     var bi = mkEl('div', 'struct-bar-item');
     var lbl = mkEl('div', 'struct-bar-label');
@@ -877,33 +988,37 @@ function renderResult(d) {
     fil.style.cssText = 'width:' + pct + '%;background:' + col;
     trk.appendChild(fil);
     var sts = mkEl('div', 'struct-bar-status');
-    sts.style.color = col; sts.textContent = s.label;
-    bi.appendChild(lbl); bi.appendChild(trk); bi.appendChild(sts);
+    sts.style.color = col;
+    sts.textContent = s.label;
+    bi.appendChild(lbl);
+    bi.appendChild(trk);
+    bi.appendChild(sts);
     if (s.ev && s.ev.length) {
       var evd = mkEl('div', '');
       evd.style.cssText = 'font-size:10px;color:var(--muted);margin-top:3px;line-height:1.5';
-      evd.textContent = s.ev.slice(0,2).join('、');
+      evd.textContent = s.ev.slice(0, 2).join('、');
       bi.appendChild(evd);
     }
     sbars.appendChild(bi);
   });
   sv.appendChild(sbars);
+
   var svs = mkEl('div', '');
   svs.style.cssText = 'margin-top:10px;text-align:right;font-size:11px;color:var(--muted)';
   svs.innerHTML = '綜合結構評分 <span style="color:' + svcColor + ';font-size:14px;font-weight:700">' + d.structScore + '</span> / 100';
   sv.appendChild(svs);
   wrap.appendChild(sv);
 
-  // Rules
   if (d.rules && d.rules.length) {
     d.rules.forEach(function(r) {
-      var ra = mkEl('div', 'rule-alert ' + (r.level==='warn'?'triggered':r.level==='caution'?'caution':'ok'));
+      var ra = mkEl('div', 'rule-alert ' + (r.level === 'warn' ? 'triggered' : r.level === 'caution' ? 'caution' : 'ok'));
       var rt = mkEl('div', 'rule-alert-title');
-      rt.textContent = (r.level==='warn'?'🚨':r.level==='caution'?'⚠️':'✅') + ' ' + r.rule;
+      rt.textContent = (r.level === 'warn' ? '🚨' : r.level === 'caution' ? '⚠️' : '✅') + ' ' + r.rule;
       var rd2 = mkEl('div', '');
       rd2.style.cssText = 'font-size:12px;color:var(--text)';
       rd2.textContent = r.text;
-      ra.appendChild(rt); ra.appendChild(rd2);
+      ra.appendChild(rt);
+      ra.appendChild(rd2);
       wrap.appendChild(ra);
     });
   } else {
@@ -912,28 +1027,25 @@ function renderResult(d) {
     wrap.appendChild(ra);
   }
 
-  // Trend
   var tn = d.trendNote || {};
   wrap.appendChild(mkRcard('rc-trend', '📊', '多框架趨勢 <span style="font-size:10px;color:var(--accent)">🤖 AUTO</span>', function(body) {
     var rows = [
-      {text: ctx.major + '（大週期）：' + (ttMap[d.majT]||d.majT) + ' <span style="font-size:10px;color:var(--muted)">' + (tn.major||'') + '</span>', type: trendScore(d.majT)>0?'ok':trendScore(d.majT)<0?'warn':''},
-      {text: ctx.mid  + '（中週期）：' + (ttMap[d.midT]||d.midT) + ' <span style="font-size:10px;color:var(--muted)">' + (tn.mid||'')   + '</span>', type: trendScore(d.midT)>0?'ok':trendScore(d.midT)<0?'warn':''},
-      {text: ctx.curr + '（現週期）：' + (ttMap[d.curT]||d.curT) + ' <span style="font-size:10px;color:var(--muted)">' + (tn.curr||'')  + '</span>', type: trendScore(d.curT)>0?'ok':trendScore(d.curT)<0?'warn':''}
+      {text: ctx.major + '（大週期）：' + (ttMap[d.majT] || d.majT) + ' <span style="font-size:10px;color:var(--muted)">' + (tn.major || '') + '</span>', type: trendScore(d.majT) > 0 ? 'ok' : trendScore(d.majT) < 0 ? 'warn' : ''},
+      {text: ctx.mid + '（中週期）：' + (ttMap[d.midT] || d.midT) + ' <span style="font-size:10px;color:var(--muted)">' + (tn.mid || '') + '</span>', type: trendScore(d.midT) > 0 ? 'ok' : trendScore(d.midT) < 0 ? 'warn' : ''},
+      {text: ctx.curr + '（現週期）：' + (ttMap[d.curT] || d.curT) + ' <span style="font-size:10px;color:var(--muted)">' + (tn.curr || '') + '</span>', type: trendScore(d.curT) > 0 ? 'ok' : trendScore(d.curT) < 0 ? 'warn' : ''}
     ];
     rows.forEach(function(r) { body.appendChild(mkBullet(r.text, r.type)); });
   }));
 
-  // Momentum
   wrap.appendChild(mkRcard('rc-mom', '⚡', '微積分動能分析', function(body) {
-    var items = (d.momA||[]).concat(d.volA||[]);
+    var items = (d.momA || []).concat(d.volA || []);
     if (items.length) addBullets(body, items);
     else body.appendChild(mkBullet('請填入前期／本期MACD柱及RSI以啟用', ''));
   }));
 
-  // Indicators
   wrap.appendChild(mkRcard('rc-ind', '🔢', '技術指標訊號', function(body) {
     var rsiBoxes = [];
-    (d.rsiA||[]).forEach(function(x) {
+    (d.rsiA || []).forEach(function(x) {
       var txt = typeof x === 'object' ? x.text : x;
       var m5 = txt.match(/RSI\(5\)=([\d.]+)/);
       var m10 = txt.match(/RSI\(10\)=([\d.]+)/);
@@ -943,72 +1055,78 @@ function renderResult(d) {
     if (rsiBoxes.length) {
       var grid = mkEl('div', 'ind-grid');
       rsiBoxes.forEach(function(x) {
-        var col = x.v>=70?'var(--red)':x.v<=30?'var(--green)':x.v>=50?'var(--green)':'var(--muted)';
-        var sig2 = x.v>=85?'⚡R2觸發':x.v>=70?'⚠️超買':x.v>=50?'✅偏多':'🔻偏空';
+        var col = x.v >= 70 ? 'var(--red)' : x.v <= 30 ? 'var(--green)' : x.v >= 50 ? 'var(--green)' : 'var(--muted)';
+        var sig2 = x.v >= 85 ? '⚡R2觸發' : x.v >= 70 ? '⚠️超買' : x.v >= 50 ? '✅偏多' : '🔻偏空';
         var box = mkEl('div', 'ind-box');
         box.innerHTML = '<div class="ind-name">' + x.n + '</div><div class="ind-val" style="color:' + col + '">' + x.v + '</div><div class="ind-signal" style="color:' + col + '">' + sig2 + '</div>';
         grid.appendChild(box);
       });
       body.appendChild(grid);
     }
-    addBullets(body, (d.maA||[]).concat(d.rsiA||[]).concat(d.macdA||[]));
+    addBullets(body, (d.maA || []).concat(d.rsiA || []).concat(d.macdA || []));
   }));
 
-  // S/R
   wrap.appendChild(mkRcard('rc-sr', '🔲', '支撐 / 壓力位', function(body) {
     if (d.sr && d.sr.length) {
       d.sr.slice(0, 8).forEach(function(s) {
         var row = mkEl('div', 'level-item');
-        var dot = mkEl('div', 'dot ' + (s.type==='R'?'dot-r':'dot-s'));
-        var lbl2 = mkEl('div', ''); lbl2.style.cssText='flex:1;font-size:12px'; lbl2.textContent=s.label;
-        var str = mkEl('div', 'strength'); str.textContent=s.strength;
-        var prc = mkEl('div', 'lv-price'); prc.textContent=s.price;
-        row.appendChild(dot); row.appendChild(lbl2); row.appendChild(str); row.appendChild(prc);
+        var dot = mkEl('div', 'dot ' + (s.type === 'R' ? 'dot-r' : 'dot-s'));
+        var lbl2 = mkEl('div', '');
+        lbl2.style.cssText = 'flex:1;font-size:12px';
+        lbl2.textContent = s.label;
+        var str = mkEl('div', 'strength');
+        str.textContent = s.strength;
+        var prc = mkEl('div', 'lv-price');
+        prc.textContent = s.price;
+        row.appendChild(dot);
+        row.appendChild(lbl2);
+        row.appendChild(str);
+        row.appendChild(prc);
         body.appendChild(row);
       });
     } else body.appendChild(mkBullet('請填入更多數據', ''));
   }));
 
-  // Fibonacci
   wrap.appendChild(mkRcard('rc-fib', '🌀', '費波那契關鍵位', function(body) {
     var note = mkEl('div', '');
-    note.style.cssText = 'font-size:10px;color:var(--muted);font-family:\'DM Mono\',monospace;margin-bottom:5px';
+    note.style.cssText = 'font-size:10px;color:var(--muted);font-family:DM Mono,monospace;margin-bottom:5px';
     note.textContent = '高點 ' + d.hi + ' → 低點 ' + d.lo;
     body.appendChild(note);
     Object.entries(d.fib).slice(1, 7).forEach(function(entry) {
-      var k = entry[0]; var v = entry[1];
+      var k = entry[0], v = entry[1];
       var row = mkEl('div', 'level-item');
-      var dot2 = mkEl('div', ''); dot2.style.cssText='width:7px;height:7px;border-radius:50%;background:var(--accent);flex-shrink:0';
-      var kl = mkEl('div', ''); kl.style.cssText='flex:1;font-size:12px;font-family:\'DM Mono\',monospace'; kl.textContent=k;
-      var vl = mkEl('div', 'lv-price'); vl.textContent=v.toFixed(2);
-      row.appendChild(dot2); row.appendChild(kl); row.appendChild(vl);
+      var dot2 = mkEl('div', '');
+      dot2.style.cssText = 'width:7px;height:7px;border-radius:50%;background:var(--accent);flex-shrink:0';
+      var kl = mkEl('div', '');
+      kl.style.cssText = 'flex:1;font-size:12px;font-family:DM Mono,monospace';
+      kl.textContent = k;
+      var vl = mkEl('div', 'lv-price');
+      vl.textContent = v.toFixed(2);
+      row.appendChild(dot2);
+      row.appendChild(kl);
+      row.appendChild(vl);
       body.appendChild(row);
     });
   }));
 
-  // Pattern
   wrap.appendChild(mkRcard('rc-pat', '🔷', '形態 / 波浪分析', function(body) {
-    addBullets(body, (d.pat||[]).concat(d.wave||[]));
+    addBullets(body, (d.pat || []).concat(d.wave || []));
   }));
 
-  // Signals
   wrap.appendChild(mkRcard('rc-sig', '🎯', '操作建議', function(body) {
-    addBullets(body, d.sig||[]);
+    addBullets(body, d.sig || []);
   }));
 
-  // Risk
   wrap.appendChild(mkRcard('rc-risk', '⚠️', '風險提示', function(body) {
-    addBullets(body, d.risk||[]);
+    addBullets(body, d.risk || []);
   }));
 
-  // Summary
   wrap.appendChild(mkRcard('rc-sum', '📝', '總結', function(body) {
     var sb = mkEl('div', 'summary-box');
     sb.textContent = d.sum;
     body.appendChild(sb);
   }));
 
-  // Timestamp
   var ts3 = mkEl('div', '');
   ts3.style.cssText = 'padding:14px;text-align:center;font-size:10px;color:var(--muted)';
   ts3.textContent = d.timestamp;
@@ -1036,11 +1154,11 @@ function renderHistory() {
   }
   el.innerHTML = '';
   h.forEach(function(x, i) {
-    var bLabel = x.bias==='BULL'?'📈 看多':x.bias==='BEAR'?'📉 看空':'➡️ 中立';
-    var bColor = x.bias==='BULL'?'var(--green)':x.bias==='BEAR'?'var(--red)':'var(--gold)';
+    var bLabel = x.bias === 'BULL' ? '📈 看多' : x.bias === 'BEAR' ? '📉 看空' : '➡️ 中立';
+    var bColor = x.bias === 'BULL' ? 'var(--green)' : x.bias === 'BEAR' ? 'var(--red)' : 'var(--gold)';
     var item = mkEl('div', 'history-item');
     item.setAttribute('onclick', 'loadHistory(' + i + ')');
-    item.innerHTML = '<div><div class="hist-ticker">' + x.sym + ' <span style="font-size:10px;color:var(--muted)">' + (tflabel(x.tf)||'') + '</span></div><div class="hist-date">' + x.ts + '</div></div>'
+    item.innerHTML = '<div><div class="hist-ticker">' + x.sym + ' <span style="font-size:10px;color:var(--muted)">' + (tflabel(x.tf) || '') + '</span></div><div class="hist-date">' + x.ts + '</div></div>'
       + '<div style="color:' + bColor + ';font-size:12px;font-weight:600">' + bLabel + '</div>'
       + '<div style="color:var(--muted)">›</div>';
     el.appendChild(item);
@@ -1055,6 +1173,5 @@ function loadHistory(i) {
   }
 }
 </script>
-
 </body>
 </html>
