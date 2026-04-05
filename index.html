@@ -548,85 +548,90 @@ function analyze(sym, tf, pr, hi, lo, cost, ma5, ma10, ma20, rsi5, rsi10, rsiPre
   if (curT === 'up-slow' || curT === 'up') p1c.push('現週期轉升');
   if (p1c.length >= 2) rules.push({rule:'P1', level:'ok', text:'低檔強攻條件成立（' + p1c.join('、') + '），可建試單30%'});
 
-  // A. 價格結構判斷（波段高低點）
-  var autoPrice = 'unknown';
-  var priceEv = [];
-  var hasSwing = !isNaN(swingH1) && !isNaN(swingL1);
-  var trendStruct = 'unknown';
-  var keySupport = NaN;
-  var keyResistance = NaN;
-  var breakdownConfirmed = false;
-  var breakoutConfirmed = false;
+ // A. 價格結構判斷（修正版：趨勢優先）
 
-  if (hasSwing) {
-    keySupport = swingL1;
-    keyResistance = swingH1;
+var autoPrice = 'unknown';
+var priceEv = [];
 
-    var hasTrend = !isNaN(swingH2) && !isNaN(swingL2);
-    if (hasTrend) {
-      var higherHigh = swingH1 > swingH2;
-      var higherLow  = swingL1 > swingL2;
-      if (higherHigh && higherLow) trendStruct = 'uptrend';
-      else if (!higherHigh && !higherLow) trendStruct = 'downtrend';
-      else if (!higherHigh && higherLow) trendStruct = 'weakening';
-      else trendStruct = 'unstable';
+var hasSwing = !isNaN(swingH1) && !isNaN(swingL1);
 
-      var trendLabel = {
-        uptrend:'上升結構(HH+HL)',
-        downtrend:'下降結構(LH+LL)',
-        weakening:'結構轉弱(只有HL)',
-        unstable:'結構不穩(只有HH)'
-      };
-      priceEv.push(trendLabel[trendStruct]);
-    }
+var trendStruct = 'unknown';
+var keySupport = NaN;
+var keyResistance = NaN;
 
-    var supportHold = pr >= keySupport;
-    if (supportHold) priceEv.push('收盤' + pr + '站上關鍵支撐' + keySupport);
-    else priceEv.push('收盤' + pr + '跌破關鍵支撐' + keySupport);
+if (hasSwing) {
 
-    var hasPrev = !isNaN(prevClose);
-    var breakdown = pr < keySupport;
-    breakdownConfirmed = hasPrev ? (pr < keySupport && prevClose < keySupport) : breakdown;
-    breakoutConfirmed  = hasPrev ? (pr > keyResistance && prevClose <= keyResistance && !isNaN(vol) && !isNaN(volPrev) && volPrev > 0 && vol/volPrev >= 1.5) : (pr > keyResistance);
+  keySupport = swingL1;
+  keyResistance = swingH1;
 
-    if (breakoutConfirmed) priceEv.push('有效突破壓力' + keyResistance + '（收盤+放量）');
-    else if (pr > keyResistance) priceEv.push('站上壓力' + keyResistance + '（待確認放量）');
+  var hasTrend = !isNaN(swingH2) && !isNaN(swingL2);
 
-    if (breakdownConfirmed) priceEv.push('連續收盤跌破支撐，結構破壞確認');
-    else if (breakdown) priceEv.push('今日跌破支撐，待明日確認');
+  if (hasTrend) {
 
-    if (hma) {
-      if (pr > ma5 && pr > ma10 && pr > ma20) priceEv.push('站上所有均線');
-      else if (pr < ma20) priceEv.push('跌破MA20');
-    }
+    var HH = swingH1 > swingH2;
+    var HL = swingL1 > swingL2;
 
-    if (breakdownConfirmed) {
+    if (HH && HL) trendStruct = 'uptrend';
+    else if (!HH && !HL) trendStruct = 'downtrend';
+    else if (!HH && HL) trendStruct = 'weakening';
+    else trendStruct = 'unstable';
+
+  }
+
+  // 🔥 核心修正：趨勢優先
+
+  if (trendStruct === 'downtrend') {
+
+    if (pr < keySupport) {
       autoPrice = 'broken';
-    } else if (breakdown) {
-      autoPrice = 'weak';
-    } else if (supportHold) {
-      if (trendStruct === 'downtrend') {
-        autoPrice = 'weak';
-      } else if (trendStruct === 'weakening' || trendStruct === 'unstable') {
-        autoPrice = 'weak';
-      } else if (trendStruct === 'uptrend' || trendStruct === 'unknown') {
-        if (!isNaN(ma5) && pr < ma5) autoPrice = 'weak';
-        else autoPrice = 'good';
-      } else {
-        autoPrice = 'good';
-      }
+      priceEv.push('跌破支撐 → 結構破壞');
     } else {
       autoPrice = 'weak';
+      priceEv.push('空頭結構中反彈');
     }
+
+  }
+  else if (trendStruct === 'uptrend') {
+
+    if (pr < keySupport) {
+      autoPrice = 'broken';
+      priceEv.push('跌破關鍵支撐');
+    }
+    else if (pr > keyResistance) {
+      autoPrice = 'good';
+      priceEv.push('突破壓力 → 主升段');
+    }
+    else {
+      autoPrice = 'good';
+      priceEv.push('多頭結構延續');
+    }
+
+  }
+  else {
+
+    if (pr < keySupport) {
+      autoPrice = 'weak';
+      priceEv.push('跌破支撐');
+    }
+    else {
+      autoPrice = 'weak';
+      priceEv.push('結構不明確');
+    }
+
+  }
+
+}
+else {
+
+  if (!isNaN(ma20)) {
+    autoPrice = 'weak';
+    priceEv.push('僅均線判斷（建議填波段點）');
   } else {
-    if (hma) {
-      if (pr > ma5 && pr > ma10 && pr > ma20) { autoPrice = 'good'; priceEv.push('站上所有均線（建議填入波段高低點以精確判斷）'); }
-      else if (pr < ma20) { autoPrice = 'weak'; priceEv.push('跌破MA20（建議填入波段高低點以精確判斷）'); }
-      else { autoPrice = 'weak'; priceEv.push('均線混雜（建議填入波段高低點以精確判斷）'); }
-    } else {
-      autoPrice = 'unknown';
-      priceEv.push('請填入波段高低點（SH1/SL1）以啟用A判斷');
-    }
+    autoPrice = 'unknown';
+    priceEv.push('缺少波段資料');
+  }
+
+}
   }
 
   // C. Momentum
