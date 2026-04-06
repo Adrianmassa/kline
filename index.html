@@ -810,14 +810,47 @@ function analyze(sym, tf, pr, hi, lo, cost, ma5, ma10, ma20, rsi5, rsi10, rsiPre
   ];
 
   // Bias score
-  var bs = 50;
-  bs += trendScore(majT)*8 + trendScore(midT)*6 + trendScore(curT)*10;
-  if (hma) { if (ma5>ma10) bs+=4; if (ma10>ma20) bs+=4; if (pr>ma20) bs+=4; }
-  if (!isNaN(rsi5)) { if (rsi5>60) bs+=5; else if (rsi5<40) bs-=5; }
-  if (!isNaN(dif)) { if (dif>0) bs+=3; if (dif>macd9) bs+=3; }
-  bs += momScore * 3;
-  bs = Math.max(5, Math.min(95, bs));
-  var bias = bs >= 58 ? 'BULL' : bs <= 42 ? 'BEAR' : 'NEUTRAL';
+ var bs = 50;
+
+bs += trendScore(majT) * 5;
+bs += trendScore(midT) * 4;
+bs += trendScore(curT) * 6;
+
+if (hma) {
+  if (ma5 > ma10) bs += 2; else if (ma5 < ma10) bs -= 2;
+  if (ma10 > ma20) bs += 2; else if (ma10 < ma20) bs -= 2;
+  if (pr > ma20) bs += 3; else if (pr < ma20) bs -= 3;
+}
+
+if (!isNaN(rsi5)) {
+  if (rsi5 >= 60 && rsi5 < 75) bs += 4;
+  else if (rsi5 >= 75) bs += 2;
+  else if (rsi5 <= 40 && rsi5 > 25) bs -= 4;
+  else if (rsi5 <= 25) bs -= 2;
+}
+
+if (!isNaN(dif) && !isNaN(macd9)) {
+  if (dif > 0) bs += 2; else if (dif < 0) bs -= 2;
+  if (dif > macd9) bs += 2; else if (dif < macd9) bs -= 2;
+}
+
+if (!isNaN(momScore)) {
+  bs += Math.max(-6, Math.min(6, momScore * 2));
+}
+
+if (!isNaN(pr) && !isNaN(hi) && !isNaN(lo) && hi > lo) {
+  var pos = (pr - lo) / (hi - lo);
+  if (pos >= 0.85) bs -= 10;
+  else if (pos >= 0.70) bs -= 7;
+  else if (pos >= 0.55) bs -= 4;
+  else if (pos <= 0.15) bs += 3;
+}
+
+if (autoPrice === 'weak') bs -= 8;
+if (autoPrice === 'broken') bs -= 15;
+
+bs = Math.max(10, Math.min(9年0, Math.round(bs)));
+var bias = bs >= 60 ? 'BULL' : bs <= 40 ? 'BEAR' : 'NEUTRAL';
 
   // Patterns
   var pat = [];
