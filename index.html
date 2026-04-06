@@ -426,7 +426,15 @@ function analyze(sym, tf, pr, hi, lo, cost, ma5, ma10, ma20, rsi5, rsi10, rsiPre
   if (!isNaN(ma20)) { if (ma20 > pr) sr.push({type:'R', price: ma20.toFixed(2), label:'MA20 壓力', strength:'中'}); else sr.push({type:'S', price: ma20.toFixed(2), label:'MA20 支撐', strength:'強'}); }
   if (!isNaN(ma10) && ma10 > pr) sr.push({type:'R', price: ma10.toFixed(2), label:'MA10 壓力', strength:'弱'});
   if (!isNaN(ma5)  && ma5  < pr) sr.push({type:'S', price: ma5.toFixed(2),  label:'MA5 支撐',  strength:'弱'});
-  sr.sort(function(a,b){ return parseFloat(b.price) - parseFloat(a.price); });
+  // 壓力：現價上方最近的優先（升序）
+  // 支撐：現價下方最近的優先（降序）
+  // 先分開排序再合併，讓閱讀時壓力在上支撐在下
+  var srR = sr.filter(function(x){ return x.type==='R' && parseFloat(x.price) > pr; });
+  var srS = sr.filter(function(x){ return x.type==='S' && parseFloat(x.price) <= pr; });
+  var srOther = sr.filter(function(x){ return (x.type==='R' && parseFloat(x.price)<=pr) || (x.type==='S' && parseFloat(x.price)>pr); });
+  srR.sort(function(a,b){ return parseFloat(a.price)-parseFloat(b.price); }); // 最近壓力優先
+  srS.sort(function(a,b){ return parseFloat(b.price)-parseFloat(a.price); }); // 最近支撐優先
+  sr = srR.concat(srS).concat(srOther);
 
   // MA analysis
   var maA = [];
@@ -832,20 +840,33 @@ function analyze(sym, tf, pr, hi, lo, cost, ma5, ma10, ma20, rsi5, rsi10, rsiPre
     wave.push({text:'趨勢方向混雜，等待方向明確後再操作', type:'caution'});
   }
 
+  // 找最近壓力（現價上方最小值）和最近支撐（現價下方最大值）
+  var aboveList = [];
+  var belowList = [];
+  for (var ri = 0; ri < sr.length; ri++) {
+    if (sr[ri].type === 'R' && parseFloat(sr[ri].price) > pr) aboveList.push(sr[ri]);
+    if (sr[ri].type === 'S' && parseFloat(sr[ri].price) <= pr) belowList.push(sr[ri]);
+  }
+  aboveList.sort(function(a,b){ return parseFloat(a.price)-parseFloat(b.price); });
+  belowList.sort(function(a,b){ return parseFloat(b.price)-parseFloat(a.price); });
+  var nearR  = aboveList.length > 0 ? aboveList[0] : null;
+  var nearR2 = aboveList.length > 1 ? aboveList[1] : null;
+  var nearS  = belowList.length > 0 ? belowList[0] : null;
+
   var sig = [];
   if (bias === 'BULL') {
     sig.push({text:'短線偏多，' + (mode === 'A' ? '可建試單30%' : '（B模式：僅最強訊號才試單）'), type:'ok'});
-    var r1 = null;
-    for (var i = 0; i < sr.length; i++) { if (sr[i].type === 'R') { r1 = sr[i]; break; } }
-    if (r1) sig.push({text:'第一目標：' + r1.price + '（' + r1.label + '）', type:''});
-    var s1 = null;
-    for (var i = 0; i < sr.length; i++) { if (sr[i].type === 'S') { s1 = sr[i]; break; } }
-    if (s1) sig.push({text:'止損：跌破' + s1.price + '出場', type:'caution'});
+    if (nearR)  sig.push({text:'第一目標（最近壓力）：' + nearR.price + '（' + nearR.label + '）', type:''});
+    if (nearR2) sig.push({text:'第二目標：' + nearR2.price + '（' + nearR2.label + '）', type:''});
+    if (nearS)  sig.push({text:'止損：跌破 ' + nearS.price + ' 出場（' + nearS.label + '）', type:'caution'});
   } else if (bias === 'BEAR') {
     sig.push({text:'整體偏空，不宜做多，等底部確認', type:'warn'});
-    sig.push({text:'反彈至壓力可減碼，嚴守R4止損', type:'caution'});
+    if (nearR) sig.push({text:'反彈壓力：' + nearR.price + '（' + nearR.label + '），可減碼位', type:'caution'});
+    if (nearS) sig.push({text:'嚴守支撐：' + nearS.price + '，跌破加速下行', type:'warn'});
   } else {
     sig.push({text:'方向不明，觀望等突破訊號', type:'caution'});
+    if (nearR) sig.push({text:'上方突破：' + nearR.price + '（' + nearR.label + '）可追多', type:''});
+    if (nearS) sig.push({text:'下方支撐：' + nearS.price + '，跌破轉空', type:''});
   }
 
   var risk = [];
@@ -885,12 +906,13 @@ function analyze(sym, tf, pr, hi, lo, cost, ma5, ma10, ma20, rsi5, rsi10, rsiPre
   var tl = {down:'下跌','down-slow':'緩跌',sideways:'橫盤','up-slow':'緩升',up:'上漲'};
   var ctx = tfctx(tf);
   var modeWord = mode === 'A' ? ' A模式進攻' : mode === 'B' ? ' B模式防守' : '';
-  var biasWord = bias === 'BULL' ? '看多' : bias === 'BEAR' ? '看空' : '中立';
-  var sum = sym + '（' + tflabel(tf) + '）現價' + pr + '，'
-    + ctx.major + tl[majT] + '、' + ctx.mid + tl[midT] + '、' + ctx.curr + tl[curT]
-    + '。整體' + biasWord + '（' + bs.toFixed(0) + '/100）' + modeWord
-    + '。費波關鍵壓力' + fib['23.6%'].toFixed(2) + '-' + fib['38.2%'].toFixed(2)
-    + '，支撐' + fib['78.6%'].toFixed(2) + '-' + lo + '。';
+  var structWord = structClass === 'good' ? '結構良好' : structClass === 'weak' ? '結構轉弱' : '結構破壞';
+  var actionWord = {hold:'建議持有續抱', observe:'建議觀察等待', reduce:'建議降低部位', add_on_breakout:'建議突破加碼'}[actionHint] || '建議觀察';
+  var nearRText = nearR ? ('，最近壓力' + nearR.price + '（' + nearR.label + '）') : '';
+  var nearSText = nearS ? ('，最近支撐' + nearS.price + '（' + nearS.label + '）') : '';
+  var sum = sym + '（' + tflabel(tf) + '）現價' + pr + '，階段判斷：' + stageState + '，' + actionWord + modeWord + '。'
+    + structWord + '（結構分' + structScore + '/100）' + nearRText + nearSText + '。'
+    + '多空方向' + (bias==='BULL'?'偏多':bias==='BEAR'?'偏空':'中立') + '（強度' + bs.toFixed(0) + '/100，僅供方向參考）。';
 
   // 技術分析總分（綜合所有指標）
   var techScore = Math.round(
