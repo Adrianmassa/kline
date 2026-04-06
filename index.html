@@ -1,3 +1,4 @@
+多空基數0版
 <!DOCTYPE html>
 
 <html lang="zh-TW">
@@ -67,6 +68,53 @@ select{width:118px;text-align:center;}
 .score-val{font-size:12px;font-family:'DM Mono',monospace;}
 .bar-track{height:6px;background:var(--card2);border-radius:3px;overflow:hidden;}
 .bar-fill{height:100%;border-radius:3px;transition:width 1s cubic-bezier(.4,0,.2,1);}
+
+.bias-center-wrap{
+  position:relative;
+  height:10px;
+  background:var(--card2);
+  border-radius:999px;
+  overflow:hidden;
+}
+.bias-center-line{
+  position:absolute;
+  left:50%;
+  top:0;
+  bottom:0;
+  width:1px;
+  background:rgba(255,255,255,0.25);
+  z-index:2;
+}
+.bias-half{
+  position:absolute;
+  top:0;
+  bottom:0;
+  width:50%;
+}
+.bias-left{
+  left:0;
+}
+.bias-right{
+  right:0;
+}
+.bias-fill-left,
+.bias-fill-right{
+  position:absolute;
+  top:0;
+  bottom:0;
+  width:0%;
+  transition:width 0.8s cubic-bezier(.4,0,.2,1);
+}
+.bias-fill-left{
+  right:0;
+  background:var(--red);
+  border-radius:999px 0 0 999px;
+}
+.bias-fill-right{
+  left:0;
+  background:var(--green);
+  border-radius:0 999px 999px 0;
+}
 .struct-verdict{margin:0 14px 10px;border-radius:14px;padding:16px;border:2px solid;}
 .struct-verdict.good{background:rgba(34,197,94,0.07);border-color:var(--green);}
 .struct-verdict.weak{background:rgba(245,158,11,0.07);border-color:var(--gold);}
@@ -811,55 +859,54 @@ function analyze(sym, tf, pr, hi, lo, cost, ma5, ma10, ma20, rsi5, rsi10, rsiPre
 
   // Bias score
 
-var biasScore = 0;
-
-biasScore += trendScore(majT) * 8;
-biasScore += trendScore(midT) * 6;
-biasScore += trendScore(curT) * 10;
+var bs = 0;
+bs += trendScore(majT) * 8;
+bs += trendScore(midT) * 6;
+bs += trendScore(curT) * 10;
 
 if (hma) {
-  if (ma5 > ma10) biasScore += 4;
-  else if (ma5 < ma10) biasScore -= 4;
+  if (ma5 > ma10) bs += 4;
+  else if (ma5 < ma10) bs -= 4;
 
-  if (ma10 > ma20) biasScore += 4;
-  else if (ma10 < ma20) biasScore -= 4;
+  if (ma10 > ma20) bs += 4;
+  else if (ma10 < ma20) bs -= 4;
 
-  if (pr > ma20) biasScore += 5;
-  else if (pr < ma20) biasScore -= 5;
+  if (pr > ma20) bs += 5;
+  else if (pr < ma20) bs -= 5;
 }
 
 if (!isNaN(rsi5)) {
-  if (rsi5 >= 60 && rsi5 < 75) biasScore += 6;
-  else if (rsi5 >= 75) biasScore += 3;
-  else if (rsi5 <= 40 && rsi5 > 25) biasScore -= 6;
-  else if (rsi5 <= 25) biasScore -= 3;
+  if (rsi5 >= 60 && rsi5 < 75) bs += 6;
+  else if (rsi5 >= 75) bs += 3;
+  else if (rsi5 <= 40 && rsi5 > 25) bs -= 6;
+  else if (rsi5 <= 25) bs -= 3;
 }
 
 if (!isNaN(dif) && !isNaN(macd9)) {
-  if (dif > 0) biasScore += 4;
-  else if (dif < 0) biasScore -= 4;
+  if (dif > 0) bs += 4;
+  else if (dif < 0) bs -= 4;
 
-  if (dif > macd9) biasScore += 4;
-  else if (dif < macd9) biasScore -= 4;
+  if (dif > macd9) bs += 4;
+  else if (dif < macd9) bs -= 4;
 }
 
 if (!isNaN(momScore)) {
-  biasScore += Math.max(-10, Math.min(10, momScore * 2));
+  bs += Math.max(-10, Math.min(10, momScore * 2));
 }
 
 if (!isNaN(pr) && !isNaN(hi) && !isNaN(lo) && hi > lo) {
   var pos = (pr - lo) / (hi - lo);
 
-  if (pos >= 0.85) biasScore -= 10;
-  else if (pos >= 0.70) biasScore -= 6;
-  else if (pos <= 0.15) biasScore += 6;
+  if (pos >= 0.85) bs -= 10;
+  else if (pos >= 0.70) bs -= 6;
+  else if (pos <= 0.15) bs += 6;
 }
 
-biasScore = Math.max(-90, Math.min(90, Math.round(biasScore)));
+bs = Math.max(-90, Math.min(90, Math.round(bs)));
 
 var bias =
-  biasScore >= 15 ? 'BULL' :
-  biasScore <= -15 ? 'BEAR' :
+  bs >= 15 ? 'BULL' :
+  bs <= -15 ? 'BEAR' :
   'NEUTRAL';
 
   // Patterns
@@ -955,7 +1002,7 @@ var bias =
   var nearSText = nearS ? ('，最近支撐' + nearS.price + '（' + nearS.label + '）') : '';
   var sum = sym + '（' + tflabel(tf) + '）現價' + pr + '，階段判斷：' + stageState + '，' + actionWord + modeWord + '。'
     + structWord + '（結構分' + structScore + '/100）' + nearRText + nearSText + '。'
-    + '多空方向' + (bias==='BULL'?'偏多':bias==='BEAR'?'偏空':'中立') + '（強度' + bs.toFixed(0) + '/100，僅供方向參考）。';
+    + '多空方向' + (bias==='BULL'?'偏多':bias==='BEAR'?'偏空':'中立') + '（強度' + (bs > 0 ? '+' : '') + bs.toFixed(0) + '，0為中軸，僅供方向參考）。';
 
   // 技術分析總分（綜合所有指標）
   var techScore = Math.round(
@@ -1110,11 +1157,38 @@ function renderResult(d) {
   auxScore2.textContent=d.bs.toFixed(0)+' / 100';
   auxRow2.appendChild(auxBadge2); auxRow2.appendChild(auxScore2);
   auxLeft2.appendChild(auxLbl2); auxLeft2.appendChild(auxRow2);
-  var auxBarWrap = mkEl('div',''); auxBarWrap.style.width='70px';
-  var auxTrack2 = mkEl('div','bar-track'); auxTrack2.style.cssText='height:4px;background:var(--card2);border-radius:2px;overflow:hidden';
-  var auxFill2 = mkEl('div',''); auxFill2.id='barFill'; auxFill2.style.cssText='height:100%;border-radius:2px;width:0%;background:'+bc2;
-  auxTrack2.appendChild(auxFill2); auxBarWrap.appendChild(auxTrack2);
-  auxCard.appendChild(auxLeft2); auxCard.appendChild(auxBarWrap);
+ var biasText = (d.bs > 0 ? '+' : '') + d.bs;
+
+var auxScore2 = mkEl('div','');
+auxScore2.style.cssText='font-size:13px;font-family:DM Mono,monospace;color:'+bc2;
+auxScore2.textContent = biasText;
+
+var auxBarWrap = mkEl('div','');
+auxBarWrap.style.cssText='width:110px';
+
+var biasWrap = mkEl('div','bias-center-wrap');
+
+var biasLine = mkEl('div','bias-center-line');
+
+var leftHalf = mkEl('div','bias-half bias-left');
+var rightHalf = mkEl('div','bias-half bias-right');
+
+var leftFill = mkEl('div','bias-fill-left');
+leftFill.id = 'biasFillLeft';
+
+var rightFill = mkEl('div','bias-fill-right');
+rightFill.id = 'biasFillRight';
+
+leftHalf.appendChild(leftFill);
+rightHalf.appendChild(rightFill);
+
+biasWrap.appendChild(leftHalf);
+biasWrap.appendChild(rightHalf);
+biasWrap.appendChild(biasLine);
+
+auxBarWrap.appendChild(biasWrap);
+auxCard.appendChild(auxLeft2);
+auxCard.appendChild(auxBarWrap);
   wrap.appendChild(auxCard);
   // Structure verdict
   var svcColor = d.structClass==='good'?'var(--green)':d.structClass==='weak'?'var(--gold)':'var(--red)';
@@ -1277,10 +1351,18 @@ function renderResult(d) {
   wrap.appendChild(ts3);
 
   el.appendChild(wrap);
-  setTimeout(function() {
-    var f = document.getElementById('barFill');
-    if (f) f.style.width = d.bs + '%';
-  }, 100);
+
+setTimeout(function() {
+  var left = document.getElementById('biasFillLeft');
+  var right = document.getElementById('biasFillRight');
+
+  var maxAbs = 90; // 你的 bs 封頂值
+  var absPct = Math.min(100, Math.abs(d.bs) / maxAbs * 100);
+
+  if (left) left.style.width = d.bs < 0 ? absPct + '%' : '0%';
+  if (right) right.style.width = d.bs > 0 ? absPct + '%' : '0%';
+}, 100);
+
 }
 
 function saveHistory(r) {
