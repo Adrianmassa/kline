@@ -333,12 +333,16 @@ function runAnalysis() {
   btn.innerHTML = '<span class="spinner"></span>分析中...';
 
   setTimeout(function() {
-    var res = analyze(sym, tf, pr, hi, lo, cost, ma5, ma10, ma20, rsi5, rsi10, rsiPrev, dif, macd9, macdCurr, macdPrev, vol, volPrev, dayChg, chip_d0, chip_d1, chip_d2, chip_d3, chip_d4, mode, swingH3, swingH1, swingH2, swingL1, swingL2, prevClose, openPrice);
-    renderResult(res);
-    saveHistory(res);
+    try {
+      var res = analyze(sym, tf, pr, hi, lo, cost, ma5, ma10, ma20, rsi5, rsi10, rsiPrev, dif, macd9, macdCurr, macdPrev, vol, volPrev, dayChg, chip_d0, chip_d1, chip_d2, chip_d3, chip_d4, mode, swingH3, swingH1, swingH2, swingL1, swingL2, prevClose, openPrice);
+      renderResult(res);
+      saveHistory(res);
+      showPage('result', document.querySelectorAll('.nav-btn')[1]);
+    } catch(e) {
+      showToast('分析錯誤: ' + e.message);
+    }
     btn.disabled = false;
-    btn.innerHTML = '⚡ 開始技術分析';
-    showPage('result', document.querySelectorAll('.nav-btn')[1]);
+    btn.innerHTML = '&#x26A1; 開始技術分析';
   }, 600);
 }
 
@@ -1367,11 +1371,13 @@ function renderResult(d) {
 
   el.appendChild(wrap);
   setTimeout(function() {
-    var f = document.getElementById('barFill');
-    if (f) {
-      var target = f.getAttribute('data-target');
-      if (target) f.style.width = target;
-    }
+    try {
+      var f = document.getElementById('barFill');
+      if (f && f.getAttribute) {
+        var target = f.getAttribute('data-target');
+        if (target) f.style.width = target;
+      }
+    } catch(e) {}
   }, 100);
 }
 
