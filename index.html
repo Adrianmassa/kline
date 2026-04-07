@@ -39,8 +39,8 @@ input[type=number]{width:88px;}
 select{width:118px;text-align:center;}
 .mode-row{display:flex;gap:8px;margin-bottom:12px;}
 .mode-btn{flex:1;padding:10px 6px;border-radius:10px;border:1.5px solid var(--border);background:var(--card);color:var(--muted);font-size:12px;font-weight:600;font-family:'Noto Sans TC',sans-serif;cursor:pointer;text-align:center;transition:all 0.2s;line-height:1.4;}
-.mode-btn.active-a{border-color:var(--green);color:var(--green);background:#0a1f12;}
-.mode-btn.active-b{border-color:var(--gold);color:var(--gold);background:#1f1600;}
+.mode-btn.active-a{border-color:var(--green);color:var(--green);background:rgba(34,197,94,0.08);}
+.mode-btn.active-b{border-color:var(--gold);color:var(--gold);background:rgba(245,158,11,0.08);}
 
 .analyze-btn{width:100%;padding:15px;background:linear-gradient(135deg,var(–accent),#0ea5e9);color:#0a0f1a;border:none;border-radius:14px;font-size:15px;font-weight:700;font-family:‘Noto Sans TC’,sans-serif;letter-spacing:1px;cursor:pointer;transition:all 0.2s;margin-top:4px;}
 .analyze-btn:active{transform:scale(0.98);opacity:0.9;}
@@ -48,9 +48,9 @@ select{width:118px;text-align:center;}
 .result-header{padding:14px 14px 10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
 .ticker{font-family:‘DM Mono’,monospace;font-size:20px;font-weight:500;}
 .bias-badge{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;font-family:‘DM Mono’,monospace;letter-spacing:1px;}
-.bias-bull{background:#0d2318;color:var(–green);border:1px solid #22c55e;}
-.bias-bear{background:#2a0808;color:var(–red);border:1px solid #ef4444;}
-.bias-neutral{background:#2a1f05;color:var(–gold);border:1px solid #f59e0b;}
+.bias-bull{background:rgba(34,197,94,0.15);color:var(–green);border:1px solid rgba(34,197,94,0.3);}
+.bias-bear{background:rgba(239,68,68,0.15);color:var(–red);border:1px solid rgba(239,68,68,0.3);}
+.bias-neutral{background:rgba(245,158,11,0.15);color:var(–gold);border:1px solid rgba(245,158,11,0.3);}
 .tf-badge{padding:3px 8px;border-radius:6px;font-size:10px;font-family:‘DM Mono’,monospace;background:var(–card2);border:1px solid var(–border);color:var(–muted);}
 .score-bar-wrap{margin:0 14px 12px;background:var(–card);border:1px solid var(–border);border-radius:12px;padding:12px;}
 .score-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;}
@@ -59,9 +59,9 @@ select{width:118px;text-align:center;}
 .bar-track{height:6px;background:var(–card2);border-radius:3px;overflow:hidden;}
 .bar-fill{height:100%;border-radius:3px;transition:width 1s cubic-bezier(.4,0,.2,1);}
 .struct-verdict{margin:0 14px 10px;border-radius:14px;padding:16px;border:2px solid;}
-.struct-verdict.good{background:#0a1f12;border-color:var(–green);}
-.struct-verdict.weak{background:#1f1600;border-color:var(–gold);}
-.struct-verdict.broken{background:#1f0808;border-color:var(–red);}
+.struct-verdict.good{background:rgba(34,197,94,0.07);border-color:var(–green);}
+.struct-verdict.weak{background:rgba(245,158,11,0.07);border-color:var(–gold);}
+.struct-verdict.broken{background:rgba(239,68,68,0.07);border-color:var(–red);}
 .struct-verdict-title{font-size:18px;font-weight:700;margin-bottom:8px;}
 .struct-bars{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px;}
 .struct-bar-item{background:var(–card2);border-radius:8px;padding:8px 10px;}
@@ -70,9 +70,9 @@ select{width:118px;text-align:center;}
 .struct-bar-fill{height:100%;border-radius:3px;}
 .struct-bar-status{font-size:11px;font-weight:600;}
 .rule-alert{margin:0 14px 10px;border-radius:10px;padding:12px 14px;border-left:3px solid;}
-.rule-alert.triggered{background:#1f0808;border-color:var(–red);}
-.rule-alert.caution{background:#1f1600;border-color:var(–gold);}
-.rule-alert.ok{background:#0a1f12;border-color:var(–green);}
+.rule-alert.triggered{background:rgba(239,68,68,0.08);border-color:var(–red);}
+.rule-alert.caution{background:rgba(245,158,11,0.08);border-color:var(–gold);}
+.rule-alert.ok{background:rgba(34,197,94,0.08);border-color:var(–green);}
 .rule-alert-title{font-size:11px;font-weight:700;font-family:‘DM Mono’,monospace;margin-bottom:5px;}
 .rcard{margin:0 14px 10px;background:var(–card);border:1px solid var(–border);border-radius:14px;overflow:hidden;}
 .rcard-header{display:flex;align-items:center;gap:8px;padding:12px 14px;cursor:pointer;user-select:none;}
@@ -94,7 +94,7 @@ select{width:118px;text-align:center;}
 .dot-s{background:var(–green);}
 .lv-price{font-family:‘DM Mono’,monospace;font-size:13px;color:var(–accent);margin-left:auto;}
 .strength{font-size:10px;color:var(–muted);font-family:‘DM Mono’,monospace;}
-.summary-box{background:#051e2a;border:1px solid #164e63;border-radius:10px;padding:12px;font-size:13px;line-height:1.8;margin-top:10px;}
+.summary-box{background:rgba(56,189,248,0.05);border:1px solid rgba(56,189,248,0.15);border-radius:10px;padding:12px;font-size:13px;line-height:1.8;margin-top:10px;}
 .ind-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:10px;}
 .ind-box{background:var(–card2);border-radius:10px;padding:9px 11px;}
 .ind-name{font-size:9px;color:var(–muted);font-family:‘DM Mono’,monospace;margin-bottom:3px;}
@@ -1068,25 +1068,16 @@ function renderResult(d) {
   // ── 主標：階段判斷 + 操作建議（決策主欄）──
 
   var aLabel = {hold:'持有續抱', observe:'觀察等待', reduce:'降低部位', add_on_breakout:'突破加碼'};
-  var aIcon  = {hold:'OK', observe:'observe', reduce:'reduce', add_on_breakout:'breakout'};
-  var aEmoji = {hold:'OK', observe:'observe', reduce:'reduce', add_on_breakout:'rocket'};
   var aIconMap = {hold:'✅', observe:'👁', reduce:'⚠️', add_on_breakout:'🚀'};
-  var aAccent = {hold:'#22c55e', observe:'#f59e0b', reduce:'#ef4444', add_on_breakout:'#38bdf8'};
+  var aColor = {hold:'var(--green)', observe:'var(--gold)', reduce:'var(--red)', add_on_breakout:'var(--accent)'};
+  var aLabel = {hold:'持有續抱', observe:'觀察等待', reduce:'降低部位', add_on_breakout:'突破加碼'};
+  var aIconMap = {hold:'✅', observe:'👁', reduce:'⚠️', add_on_breakout:'🚀'};
+  var aBg = {hold:'rgba(34,197,94,0.08)', observe:'rgba(245,158,11,0.08)', reduce:'rgba(239,68,68,0.08)', add_on_breakout:'rgba(56,189,248,0.08)'};
+  var aBorder = {hold:'rgba(34,197,94,0.3)', observe:'rgba(245,158,11,0.3)', reduce:'rgba(239,68,68,0.3)', add_on_breakout:'rgba(56,189,248,0.3)'};
   var ah = d.actionHint || 'observe';
-  var accentColor = aAccent[ah] || '#f59e0b';
 
   var mainCard = mkEl('div','');
-  mainCard.style.margin = '0 14px 10px';
-  mainCard.style.borderRadius = '14px';
-  mainCard.style.padding = '16px';
-  mainCard.style.background = 'var(--card)';
-  mainCard.style.borderLeft = '4px solid ' + accentColor;
-  mainCard.style.borderTop = '1px solid var(--border)';
-  mainCard.style.borderRight = '1px solid var(--border)';
-  mainCard.style.borderBottom = '1px solid var(--border)';
-  mainCard.style.display = 'flex';
-  mainCard.style.alignItems = 'center';
-  mainCard.style.gap = '12px';
+  mainCard.style.cssText = 'margin:0 14px 10px;border-radius:14px;padding:16px;background:' + (aBg[ah]||'rgba(245,158,11,0.08)') + ';border:2px solid ' + (aBorder[ah]||'rgba(245,158,11,0.3)') + ';display:flex;align-items:center;gap:12px';
   var mainLeft = mkEl('div',''); mainLeft.style.flex='1';
   var mainLbl = mkEl('div','');
   mainLbl.style.cssText='font-size:10px;color:var(--muted);font-family:DM Mono,monospace;letter-spacing:1px;margin-bottom:4px';
@@ -1103,7 +1094,7 @@ function renderResult(d) {
   var mainIcon = mkEl('div',''); mainIcon.style.cssText='font-size:22px;margin-bottom:3px';
   mainIcon.textContent = aIconMap[ah] || 'observe';
   var mainAction = mkEl('div','');
-  mainAction.style.cssText='font-size:13px;font-weight:700;color:'+accentColor;
+  mainAction.style.cssText='font-size:13px;font-weight:700;color:'+(aColor[ah]||'var(--gold)');
   mainAction.textContent = aLabel[ah] || '觀察等待';
   mainRight.appendChild(mainIcon); mainRight.appendChild(mainAction);
   mainCard.appendChild(mainLeft); mainCard.appendChild(mainRight);
@@ -1155,7 +1146,7 @@ function renderResult(d) {
   auxBadge2.style.fontSize = '11px';
   auxBadge2.style.fontWeight = '700';
   auxBadge2.style.fontFamily = 'DM Mono,monospace';
-  auxBadge2.style.background = '#0a0f1a';
+  auxBadge2.style.background = 'rgba(0,0,0,0.2)';
   auxBadge2.style.border = '1px solid ' + bsColor;
   auxBadge2.style.color = bsColor;
   auxBadge2.textContent = d.biasLabel || (bsVal>=25?'偏多':bsVal<=-25?'偏空':'中性');
