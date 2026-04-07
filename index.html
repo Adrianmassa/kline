@@ -1330,8 +1330,9 @@ function renderResult(d) {
     note.style.cssText = 'font-size:10px;color:var(--muted);font-family:\'DM Mono\',monospace;margin-bottom:5px';
     note.textContent = '高點 ' + d.hi + ' → 低點 ' + d.lo;
     body.appendChild(note);
-    Object.entries(d.fib).slice(1, 7).forEach(function(entry) {
-      var k = entry[0]; var v = entry[1];
+    var fibKeyList = Object.keys(d.fib).slice(1, 7);
+    fibKeyList.forEach(function(k) {
+      var v = d.fib[k];
       var row = mkEl('div', 'level-item');
       var dot2 = mkEl('div', ''); dot2.style.cssText='width:7px;height:7px;border-radius:50%;background:var(--accent);flex-shrink:0';
       var kl = mkEl('div', ''); kl.style.cssText='flex:1;font-size:12px;font-family:\'DM Mono\',monospace'; kl.textContent=k;
