@@ -857,14 +857,21 @@ if (!isNaN(dif) && !isNaN(macd9)) {
 }
 
 // 動能
+
 bs += Math.max(-8, Math.min(8, momScore * 2));
 
-// 結構降權
-if (structClass === 'weak') bs *= 0.7;
-if (structClass === 'broken') bs *= 0.4;
+if (structClass === 'weak') {
+  bs = Math.min(bs, 75);
+  bs = Math.max(bs, -75);
+}
 
-// 最終壓縮
-bs = 100 * Math.tanh(bs / 50);
+if (structClass === 'broken') {
+  bs *= 0.45;
+  bs = Math.min(bs, 35);
+  bs = Math.max(bs, -35);
+}
+
+bs = 100 * Math.tanh(bs / 55);
 
   var bias = (bs >= 25) ? 'BULL' : (bs <= -25) ? 'BEAR' : 'NEUTRAL';
   var biasLabel, biasLabelColor;
