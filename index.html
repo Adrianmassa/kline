@@ -816,10 +816,13 @@ function analyze(sym, tf, pr, hi, lo, cost, ma5, ma10, ma20, rsi5, rsi10, rsiPre
 
   // Bias score
   // 多空強度：-100 ~ +100（0為中性）
-  var bs = 0;
-  bs += trendScore(majT)*12 + trendScore(midT)*9 + trendScore(curT)*14;
 
-// 均線「結構」判斷（只算一次）
+var bs = 0;
+
+// 趨勢權重下修
+bs += trendScore(majT)*8 + trendScore(midT)*6 + trendScore(curT)*10;
+
+// 均線結構
 if (hma) {
   if (ma5 > ma10 && ma10 > ma20) {
     bs += 10;
@@ -830,16 +833,39 @@ if (hma) {
   }
 }
 
-// 價格「位置」判斷（獨立）
+// 價格相對 MA20 位置
 if (!isNaN(ma20)) {
   if (pr > ma20) bs += 4;
   else bs -= 4;
 }
 
-  if (!isNaN(rsi5)) { if (rsi5>60) bs+=8; else if (rsi5<40) bs-=8; }
-  if (!isNaN(dif)) { if (dif>0) bs+=5; if (dif>macd9) bs+=5; }
-  bs += momScore * 4;
-  bs = 100 * Math.tanh(bs / 50);
+// RSI
+if (!isNaN(rsi5)) {
+  if (rsi5 > 60 && rsi5 < 75) bs += 6;
+  else if (rsi5 >= 75) bs += 2;
+  else if (rsi5 < 40 && rsi5 > 25) bs -= 6;
+  else if (rsi5 <= 25) bs -= 2;
+}
+
+// MACD
+if (!isNaN(dif) && !isNaN(macd9)) {
+  if (dif > 0) bs += 4;
+  else bs -= 4;
+
+  if (dif > macd9) bs += 4;
+  else bs -= 4;
+}
+
+// 動能
+bs += Math.max(-8, Math.min(8, momScore * 2));
+
+// 結構降權
+if (structClass === 'weak') bs *= 0.7;
+if (structClass === 'broken') bs *= 0.4;
+
+// 最終壓縮
+bs = 100 * Math.tanh(bs / 50);
+
   var bias = (bs >= 25) ? 'BULL' : (bs <= -25) ? 'BEAR' : 'NEUTRAL';
   var biasLabel, biasLabelColor;
   if (bs >= 60)                 { biasLabel = '強多'; biasLabelColor = '#22c55e'; }
@@ -1123,7 +1149,7 @@ function renderResult(d) {
   // Row 3: scale labels
   var scaleRow = mkEl('div',''); scaleRow.style.cssText='display:flex;justify-content:space-between;margin-top:3px';
   var sL = mkEl('div',''); sL.style.cssText='font-size:9px;color:var(--muted);font-family:DM Mono,monospace'; sL.textContent='-100';
-  var sM = mkEl('div',''); sM.style.cssText='font-size:9px;color:var(--muted);font-family:DM Mono,monospace;text-align:center'; sM.textContent='0  |  ' + bsVal;
+  var sM = mkEl('div',''); sM.style.cssText='font-size:9px;color:var(--muted);font-family:DM Mono,monospace;text-align:center'; sM.textContent='0  |  ' + bsVal.toFixed(0);
   var sR = mkEl('div',''); sR.style.cssText='font-size:9px;color:var(--muted);font-family:DM Mono,monospace'; sR.textContent='+100';
   scaleRow.appendChild(sL); scaleRow.appendChild(sM); scaleRow.appendChild(sR);
   auxCard.appendChild(scaleRow);
