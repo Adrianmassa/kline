@@ -210,6 +210,8 @@ select{width:118px;text-align:center;}
 
 <script>
 var tradeMode = 'N';
+var deleteMode = false;
+var deleteSet = {};
 
 function showPage(id, btn) {
   var pages = document.querySelectorAll('.page');
@@ -1080,18 +1082,89 @@ function saveHistory(r) {
 function renderHistory() {
   var h=JSON.parse(localStorage.getItem('kline_h')||'[]');
   var el=document.getElementById('historyList');
-  if(!h.length){el.innerHTML='<div class="empty-state"><div class="empty-icon">📭</div><div class="empty-text">\u9084\u6c92\u6709\u5206\u6790\u8a18\u9304</div></div>';return;}
+  if(!h.length){
+    deleteMode=false; deleteSet={};
+    updateDeleteUI();
+    el.innerHTML='<div class="empty-state"><div class="empty-icon">📭</div><div class="empty-text">還沒有分析記錄</div></div>';
+    return;
+  }
   el.innerHTML='';
   h.forEach(function(x,i){
-    var bLabel=x.bias==='BULL'?'📈 \u770b\u591a':x.bias==='BEAR'?'📉 \u770b\u7a7a':'\u27a1 \u4e2d\u7acb';
+    var bLabel=x.bias==='BULL'?'📈 看多':x.bias==='BEAR'?'📉 看空':'➡ 中立';
     var bColor=x.bias==='BULL'?'var(--green)':x.bias==='BEAR'?'var(--red)':'var(--gold)';
     var item=mkEl('div','history-item');
-    item.setAttribute('onclick','loadHistory('+i+')');
-    item.innerHTML='<div><div class="hist-ticker">'+x.sym+' <span style="font-size:10px;color:var(--muted)">'+(tflabel(x.tf)||'')+'</span></div><div class="hist-date">'+x.ts+'</div></div>'
-      +'<div style="color:'+bColor+';font-size:12px;font-weight:600">'+bLabel+'</div>'
-      +'<div style="color:var(--muted)">\u203a</div>';
+    item.id='hist-item-'+i;
+    if(deleteMode){
+      var chk=mkEl('div','');
+      var isSel=deleteSet[i];
+      chk.style.cssText='width:20px;height:20px;border-radius:50%;border:2px solid '+(isSel?'var(--red)':'var(--border)')+';background:'+(isSel?'var(--red)':'transparent')+';flex-shrink:0;display:flex;align-items:center;justify-content:center;margin-right:4px';
+      if(isSel){chk.innerHTML='<span style="color:#fff;font-size:11px">✓</span>';}
+      item.appendChild(chk);
+      item.setAttribute('onclick','toggleSelect('+i+')');
+    } else {
+      item.setAttribute('onclick','loadHistory('+i+')');
+    }
+    var info=mkEl('div',''); info.style.flex='1';
+    info.innerHTML='<div class="hist-ticker">'+x.sym+' <span style="font-size:10px;color:var(--muted)">'+(tflabel(x.tf)||'')+'</span></div><div class="hist-date">'+x.ts+'</div>';
+    item.appendChild(info);
+    var badge=mkEl('div',''); badge.style.cssText='color:'+bColor+';font-size:12px;font-weight:600'; badge.textContent=bLabel;
+    item.appendChild(badge);
+    if(!deleteMode){var arr=mkEl('div',''); arr.style.color='var(--muted)'; arr.textContent='›'; item.appendChild(arr);}
     el.appendChild(item);
   });
+}
+
+function toggleDeleteMode() {
+  deleteMode=!deleteMode;
+  deleteSet={};
+  updateDeleteUI();
+  renderHistory();
+}
+
+function updateDeleteUI() {
+  var btn=document.getElementById('deleteToggleBtn');
+  var banner=document.getElementById('deleteBanner');
+  if(!btn||!banner) return;
+  var count=Object.keys(deleteSet).length;
+  if(deleteMode){
+    btn.textContent='取消';
+    btn.style.color='var(--accent)';
+    btn.style.borderColor='var(--accent)';
+    banner.style.display='block';
+    document.getElementById('deleteCount').textContent=count+' 筆已選';
+  } else {
+    btn.textContent='選擇刪除';
+    btn.style.color='var(--muted)';
+    btn.style.borderColor='var(--border)';
+    banner.style.display='none';
+  }
+}
+
+function toggleSelect(i) {
+  if(deleteSet[i]) delete deleteSet[i];
+  else deleteSet[i]=true;
+  updateDeleteUI();
+  renderHistory();
+}
+
+function deleteSelected() {
+  var keys=Object.keys(deleteSet).map(Number).sort(function(a,b){return b-a;});
+  if(!keys.length){showToast('請先選擇記錄');return;}
+  var h=JSON.parse(localStorage.getItem('kline_h')||'[]');
+  keys.forEach(function(i){h.splice(i,1);});
+  localStorage.setItem('kline_h',JSON.stringify(h));
+  deleteSet={};
+  deleteMode=false;
+  showToast('已刪除 '+keys.length+' 筆記錄');
+  renderHistory();
+}
+
+function deleteAll() {
+  localStorage.setItem('kline_h','[]');
+  deleteSet={};
+  deleteMode=false;
+  showToast('已清空所有記錄');
+  renderHistory();
 }
 
 function loadHistory(i) {
