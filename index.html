@@ -805,6 +805,8 @@ function analyze(sym, tf, pr, hi, lo, cost, ma5, ma10, ma20, rsi5, rsi10, rsiPre
   };
   var chipLabel = autoChip === 'unknown' ? '未填入' : (chipTrendDisplay[chipTrend] || sLabel[autoChip]);
 
+  var chipLabel = sLabel[autoChip] || autoChip;
+
   var structDetails = [
     {dim:'A. 價格結構', val:autoPrice, score:scoreA, weight:40, label:sLabel[autoPrice]||autoPrice, ev:priceEv},
     {dim:'B. 量能條件', val:autoVol,   score:scoreB, weight:25, label:sLabel[autoVol]||autoVol,     ev:volEv},
@@ -866,24 +868,34 @@ function analyze(sym, tf, pr, hi, lo, cost, ma5, ma10, ma20, rsi5, rsi10, rsiPre
   var sig = [];
   if (bias === 'BULL') {
     sig.push({text:'短線偏多，' + (mode === 'A' ? '可建試單30%' : '（B模式：僅最強訊號才試單）'), type:'ok'});
-    if (nearR)  sig.push({text:'第一目標（最近壓力）：' + nearR.price + '（' + nearR.label + '）', type:''});
-    if (nearR2) sig.push({text:'第二目標：' + nearR2.price + '（' + nearR2.label + '）', type:''});
-    if (nearS)  sig.push({text:'短線止損：跌破 ' + nearS.price + ' 出場（' + nearS.label + '）', type:'caution'});
+    if (!isNaN(swingH1)) sig.push({text:'結構壓力 SH1=' + swingH1 + '（突破才確認主升）', type:''});
+    if (nearR && !isNaN(swingH1) && parseFloat(nearR.price) !== swingH1) sig.push({text:'最近技術壓力：' + nearR.price + '（' + nearR.label + '）', type:''});
+    else if (nearR && isNaN(swingH1)) sig.push({text:'最近壓力：' + nearR.price + '（' + nearR.label + '）', type:''});
+    if (nearS)  sig.push({text:'短線止損：跌破 ' + nearS.price + '（' + nearS.label + '）', type:'caution'});
+    if (!isNaN(swingL1)) sig.push({text:'結構止損 SL1=' + swingL1 + '（跌破結構破壞，R4啟動）', type:'warn'});
   } else if (bias === 'BEAR') {
     sig.push({text:'整體偏空，不宜做多，等底部確認', type:'warn'});
-    if (nearR) sig.push({text:'反彈壓力：' + nearR.price + '（' + nearR.label + '），可減碼位', type:'caution'});
-    if (nearS) sig.push({text:'嚴守支撐：' + nearS.price + '，跌破加速下行', type:'warn'});
+    if (!isNaN(swingH1)) sig.push({text:'結構壓力 SH1=' + swingH1 + '，反彈至此可減碼', type:'caution'});
+    else if (nearR) sig.push({text:'反彈壓力：' + nearR.price + '（' + nearR.label + '），可減碼位', type:'caution'});
+    if (!isNaN(swingL1)) sig.push({text:'結構止損 SL1=' + swingL1 + '（跌破確認下行）', type:'warn'});
+    else if (nearS) sig.push({text:'嚴守支撐：' + nearS.price + '，跌破加速下行', type:'warn'});
   } else {
     sig.push({text:'方向不明，觀望等突破訊號', type:'caution'});
-    if (nearR) sig.push({text:'上方突破：' + nearR.price + '（' + nearR.label + '）可追多', type:''});
-    if (nearS) sig.push({text:'下方支撐：' + nearS.price + '，跌破轉空', type:''});
+    if (!isNaN(swingH1)) sig.push({text:'突破結構壓力 SH1=' + swingH1 + ' 才可追多', type:''});
+    else if (nearR) sig.push({text:'上方突破：' + nearR.price + '（' + nearR.label + '）可追多', type:''});
+    if (!isNaN(swingL1)) sig.push({text:'結構支撐 SL1=' + swingL1 + '，跌破轉空', type:''});
+    else if (nearS) sig.push({text:'下方支撐：' + nearS.price + '，跌破轉空', type:''});
   }
 
   var risk = [];
   if (!isNaN(rsi5) && rsi5 >= 70) risk.push({text:'RSI超買，避免追高', type:'warn'});
   if (majT === 'down') risk.push({text:'大週期向下，反彈不宜重倉', type:'warn'});
   if (mode === 'B') risk.push({text:'B模式禁止攤平虧損股', type:'caution'});
-  risk.push({text:'結構止損：跌破 ' + lo + ' 立即出場（R4 結構破壞）', type:'warn'});
+  if (!isNaN(swingL1)) {
+    risk.push({text:'結構止損 SL1=' + swingL1 + '：跌破立即出場（R4 結構破壞）', type:'warn'});
+  } else {
+    risk.push({text:'結構止損：跌破 ' + lo + ' 立即出場（R4 結構破壞）', type:'warn'});
+  }
   risk.push({text:'本分析為技術參考，不構成投資建議', type:''});
 
   // 階段判斷 stage_state
@@ -918,11 +930,22 @@ function analyze(sym, tf, pr, hi, lo, cost, ma5, ma10, ma20, rsi5, rsi10, rsiPre
   var modeWord = mode === 'A' ? ' A模式進攻' : mode === 'B' ? ' B模式防守' : '';
   var structWord = structClass === 'good' ? '結構良好' : structClass === 'weak' ? '結構轉弱' : '結構破壞';
   var actionWord = {hold:'建議持有續抱', observe:'建議觀察等待', reduce:'建議降低部位', add_on_breakout:'建議突破加碼'}[actionHint] || '建議觀察';
-  var nearRText = nearR ? ('，最近壓力' + nearR.price + '（' + nearR.label + '）') : '';
-  var nearSText = nearS ? ('，最近支撐' + nearS.price + '（' + nearS.label + '）') : '';
+
+  // 第一層：結構關鍵位（SH1/SL1）
+  var structR_text = !isNaN(swingH1) ? ('結構壓力 SH1=' + swingH1) : '';
+  var structS_text = !isNaN(swingL1) ? ('結構支撐 SL1=' + swingL1) : '';
+  var structLevels = [structR_text, structS_text].filter(function(x){ return x; }).join('，');
+
+  // 第二層：最近技術位（費波/均線）
+  var techR_text = nearR ? ('最近技術壓力 ' + nearR.price + '（' + nearR.label + '）') : '';
+  var techS_text = nearS ? ('最近技術支撐 ' + nearS.price + '（' + nearS.label + '）') : '';
+  var techLevels = [techR_text, techS_text].filter(function(x){ return x; }).join('，');
+
   var sum = sym + '（' + tflabel(tf) + '）現價' + pr + '，階段判斷：' + stageState + '，' + actionWord + modeWord + '。'
-    + structWord + '（結構分' + structScore + '/100）' + nearRText + nearSText + '。'
-    + '多空方向' + (bias==='BULL'?'偏多':bias==='BEAR'?'偏空':'中立') + '（強度' + bs.toFixed(0) + '/100，僅供方向參考）。';
+    + structWord + '（結構分' + structScore + '/100）'
+    + (structLevels ? '。' + structLevels : '')
+    + (techLevels ? '。' + techLevels : '') + '。'
+    + '多空方向' + (bias==='BULL'?'偏多':bias==='BEAR'?'偏空':'中立') + '（強度' + (bs > 0 ? '+' : '') + bs + '，不代表可追價）。';
 
   // 技術分析總分（綜合所有指標）
   var techScore = Math.round(
