@@ -1067,23 +1067,24 @@ function renderResult(d) {
   wrap.appendChild(hdr);
 
   // ── 主標：階段判斷 + 操作建議（決策主欄）──
-  var aColor = {hold:'var(--green)', observe:'var(--gold)', reduce:'var(--red)', add_on_breakout:'var(--accent)'};
+
   var aLabel = {hold:'持有續抱', observe:'觀察等待', reduce:'降低部位', add_on_breakout:'突破加碼'};
   var aIcon  = {hold:'OK', observe:'observe', reduce:'reduce', add_on_breakout:'breakout'};
   var aEmoji = {hold:'OK', observe:'observe', reduce:'reduce', add_on_breakout:'rocket'};
   var aIconMap = {hold:'✅', observe:'👁', reduce:'⚠️', add_on_breakout:'🚀'};
-  var aBg = {hold:'#0d2318', observe:'#2a1f05', reduce:'#2a0808', add_on_breakout:'#051e2a'};
-  var aBorder = {hold:'#22c55e', observe:'#f59e0b', reduce:'#ef4444', add_on_breakout:'#38bdf8'};
+  var aAccent = {hold:'#22c55e', observe:'#f59e0b', reduce:'#ef4444', add_on_breakout:'#38bdf8'};
   var ah = d.actionHint || 'observe';
+  var accentColor = aAccent[ah] || '#f59e0b';
 
   var mainCard = mkEl('div','');
   mainCard.style.margin = '0 14px 10px';
   mainCard.style.borderRadius = '14px';
   mainCard.style.padding = '16px';
-  mainCard.style.background = aBg[ah] || 'rgba(245,158,11,0.08)';
-  mainCard.style.borderWidth = '2px';
-  mainCard.style.borderStyle = 'solid';
-  mainCard.style.borderColor = aBorder[ah] || '#f59e0b';
+  mainCard.style.background = 'var(--card)';
+  mainCard.style.borderLeft = '4px solid ' + accentColor;
+  mainCard.style.borderTop = '1px solid var(--border)';
+  mainCard.style.borderRight = '1px solid var(--border)';
+  mainCard.style.borderBottom = '1px solid var(--border)';
   mainCard.style.display = 'flex';
   mainCard.style.alignItems = 'center';
   mainCard.style.gap = '12px';
@@ -1103,7 +1104,7 @@ function renderResult(d) {
   var mainIcon = mkEl('div',''); mainIcon.style.cssText='font-size:22px;margin-bottom:3px';
   mainIcon.textContent = aIconMap[ah] || 'observe';
   var mainAction = mkEl('div','');
-  mainAction.style.cssText='font-size:13px;font-weight:700;color:'+(aColor[ah]||'var(--gold)');
+  mainAction.style.cssText='font-size:13px;font-weight:700;color:'+accentColor;
   mainAction.textContent = aLabel[ah] || '觀察等待';
   mainRight.appendChild(mainIcon); mainRight.appendChild(mainAction);
   mainCard.appendChild(mainLeft); mainCard.appendChild(mainRight);
