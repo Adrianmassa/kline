@@ -675,16 +675,6 @@ function analyze(sym, tf, pr, hi, lo, cost, ma5, ma10, ma20, rsi5, rsi10, rsiPre
     rules.push({rule:'R4', level:'warn', text:'結構破壞確認，R4強制規則：大幅降低部位或全出'});
   }
 
-// === 洗盤 vs 出貨辨識 ===
-var isAboveMA = (!isNaN(ma10) && pr > ma10);
-var isVolumeShrink = (!isNaN(vol) && !isNaN(volPrev) && vol < volPrev * 0.8);
-var noBreakSupport = (!isNaN(swingL1) && pr >= swingL1);
-
-// 判斷 weak 是否為洗盤
-if (autoPrice === 'weak' && isAboveMA && isVolumeShrink && noBreakSupport) {
-  autoPrice = 'weak_pullback';
-}
-
 function sScore(v) {
   return v === 'good' ? 100 :
          v === 'weak_pullback' ? 60 :
@@ -712,11 +702,8 @@ var sLabel = {
   if (scoreD !== null) { ts2 += scoreD * 15; tw += 15; }
   var structScore = tw > 0 ? Math.round(ts2 / tw) : 50;
 
-  var structClass, structTitle, structDesc;
-  if (autoPrice === 'broken') {
-    structClass = 'broken'; structTitle = '🚨 結構破壞 BROKEN';
-    structDesc = '價格結構已破壞（主體條件），R4強制規則應啟動。大幅降低部位或全出。';
-  } else if (autoPrice === 'broken') {
+ var structClass, structTitle, structDesc;
+if (autoPrice === 'broken') {
   structClass = 'broken';
   structTitle = '🚨 結構破壞 BROKEN';
   structDesc = '價格結構已破壞（主體條件），R4強制規則應啟動。大幅降低部位或全出。';
@@ -825,6 +812,15 @@ var sLabel = {
     chipEv.push('未填入三大法人數據，不計入評分');
   }
 
+// === 洗盤 vs 出貨辨識（放在 autoChip 判斷完成後）===
+var isAboveMA = (!isNaN(ma10) && pr > ma10);
+var isVolumeShrink = (!isNaN(vol) && !isNaN(volPrev) && vol < volPrev * 0.8);
+var noBreakSupport = (!isNaN(swingL1) && pr >= swingL1);
+
+if (autoPrice === 'weak' && isAboveMA && isVolumeShrink && noBreakSupport) {
+  autoPrice = 'weak_pullback';
+}
+
   // 籌碼趨勢標籤（用於顯示）
   var chipTrendDisplay = {
     strong_buy:    '連續買超',
@@ -836,9 +832,7 @@ var sLabel = {
     strong_sell:   '連續賣超',
     neutral:       '數據不足'
   };
-  var chipLabel = autoChip === 'unknown' ? '未填入' : (chipTrendDisplay[chipTrend] || sLabel[autoChip]);
-
-  var chipLabel = sLabel[autoChip] || autoChip;
+ var chipLabel = autoChip === 'unknown' ? '未填入' : (chipTrendDisplay[chipTrend] || sLabel[autoChip]);
 
   var structDetails = [
     {dim:'A. 價格結構', val:autoPrice, score:scoreA, weight:40, label:sLabel[autoPrice]||autoPrice, ev:priceEv},
@@ -972,28 +966,50 @@ bs = 100 * Math.tanh(bs / 55);
   risk.push({text:'本分析為技術參考，不構成投資建議', type:''});
 
   // 階段判斷 stage_state
-  var stageState = '整理中';
-  var actionHint = 'observe';
-  if (hasSwing) {
-    var inUptrend = (trendStruct === 'uptrend');
-    var nearBottom = !isNaN(swingL1) && pr <= swingL1 * 1.08;
-    var nearBreakout = !isNaN(swingH1) && pr >= swingH1 * 0.97;
-    if (autoPrice === 'broken') {
-      stageState = '出貨/跌破段'; actionHint = 'reduce';
-    } else if (nearBottom && autoPrice !== 'broken') {
-      stageState = '底部反彈'; actionHint = 'observe';
-    } else if (inUptrend && pr > (isNaN(ma20)?pr:ma20)) {
-      if (nearBreakout) { stageState = '突破段'; actionHint = 'add_on_breakout'; }
-      else { stageState = '初升段'; actionHint = 'hold'; }
-    } else if (autoPrice === 'weak' || autoPrice === 'weak_pullback') {
-  stageState = autoPrice === 'weak_pullback' ? '洗盤整理' : '高檔整理/轉弱';
-  actionHint = 'observe';
-}
+ var stageState = '整理中';
+var actionHint = 'observe';
+
+if (hasSwing) {
+  var inUptrend = (trendStruct === 'uptrend');
+  var nearBottom = !isNaN(swingL1) && pr <= swingL1 * 1.08;
+  var nearBreakout = !isNaN(swingH1) && pr >= swingH1 * 0.97;
+
+  if (autoPrice === 'broken') {
+    stageState = '出貨/跌破段';
+    actionHint = 'reduce';
+  } else if (nearBottom && autoPrice !== 'broken') {
+    stageState = '底部反彈';
+    actionHint = 'observe';
+  } else if (inUptrend && pr > (isNaN(ma20) ? pr : ma20)) {
+    if (nearBreakout) {
+      stageState = '突破段';
+      actionHint = 'add_on_breakout';
+    } else {
+      stageState = '初升段';
+      actionHint = 'hold';
+    }
+  } else if (autoPrice === 'weak_pullback') {
+    stageState = '洗盤整理';
+    actionHint = 'observe';
+  } else if (autoPrice === 'weak') {
+    stageState = '高檔整理/轉弱';
+    actionHint = 'observe';
   } else {
-    if (bias === 'BULL') { stageState = '偏多'; actionHint = 'hold'; }
-    else if (bias === 'BEAR') { stageState = '偏空'; actionHint = 'reduce'; }
-    else { stageState = '中立'; actionHint = 'observe'; }
+    stageState = '盤整中';
+    actionHint = 'observe';
   }
+} else {
+  if (bias === 'BULL') {
+    stageState = '偏多';
+    actionHint = 'hold';
+  } else if (bias === 'BEAR') {
+    stageState = '偏空';
+    actionHint = 'reduce';
+  } else {
+    stageState = '中立';
+    actionHint = 'observe';
+  }
+}
   var actionLabels = {hold:'持有續抱', observe:'觀察等待', reduce:'降低部位', add_on_breakout:'突破加碼'};
   var actionColors = {hold:'var(--green)', observe:'var(--gold)', reduce:'var(--red)', add_on_breakout:'var(--accent)'};
 
