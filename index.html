@@ -678,26 +678,32 @@ function analyze(sym, tf, pr, hi, lo, cost, ma5, ma10, ma20, rsi5, rsi10, rsiPre
   function sScore(v) { return v === 'good' ? 100 : v === 'weak' ? 40 : v === 'broken' ? 0 : 50; }
   var sLabel = {good:'良好', weak:'轉弱', broken:'破壞', unknown:'數據不足'};
 
-var structClass, structTitle, structDesc;
+  var scoreA = autoPrice === 'unknown' ? null : sScore(autoPrice);
+  var scoreB = autoVol   === 'unknown' ? null : sScore(autoVol);
+  var scoreC = autoMom   === 'unknown' ? null : sScore(autoMom);
+  var scoreD = autoChip  === 'unknown' ? null : sScore(autoChip);
 
-// 只有「價格結構真的 broken」才允許直接判 BROKEN
-if (autoPrice === 'broken') {
-  structClass = 'broken';
-  structTitle = '🚨 結構破壞 BROKEN';
-  structDesc = '價格結構已破壞（主體條件），R4強制規則應啟動。大幅降低部位或全出。';
-} else if (structScore >= 70) {
-  structClass = 'good';
-  structTitle = '✅ 結構良好 INTACT';
-  structDesc = '四個維度整體健康，可依系統規則持有或建倉。持續監控是否有轉弱訊號。';
-} else if (structScore >= 40) {
-  structClass = 'weak';
-  structTitle = '⚠️ 結構轉弱 WEAKENING';
-  structDesc = '部分條件出現惡化，尚未完全破壞。應降低部位，提高出場敏感度，禁止加碼。';
-} else {
-  structClass = 'broken';
-  structTitle = '🚨 結構破壞 BROKEN';
-  structDesc = '多個維度同步惡化，R4強制規則啟動。大幅降低部位或全出。';
-}
+  var tw = 0, ts2 = 0;
+  if (scoreA !== null) { ts2 += scoreA * 40; tw += 40; }
+  if (scoreB !== null) { ts2 += scoreB * 25; tw += 25; }
+  if (scoreC !== null) { ts2 += scoreC * 20; tw += 20; }
+  if (scoreD !== null) { ts2 += scoreD * 15; tw += 15; }
+  var structScore = tw > 0 ? Math.round(ts2 / tw) : 50;
+
+  var structClass, structTitle, structDesc;
+  if (autoPrice === 'broken') {
+    structClass = 'broken'; structTitle = '🚨 結構破壞 BROKEN';
+    structDesc = '價格結構已破壞（主體條件），R4強制規則應啟動。大幅降低部位或全出。';
+  } else if (structScore >= 70) {
+    structClass = 'good'; structTitle = '✅ 結構良好 INTACT';
+    structDesc = '四個維度整體健康，可依系統規則持有或建倉。持續監控是否有轉弱訊號。';
+  } else if (structScore >= 40) {
+    structClass = 'weak'; structTitle = '⚠️ 結構轉弱 WEAKENING';
+    structDesc = '部分條件出現惡化，尚未完全破壞。應降低部位，提高出場敏感度，禁止加碼。';
+  } else {
+    structClass = 'broken'; structTitle = '🚨 結構破壞 BROKEN';
+    structDesc = '多個維度同步惡化，R4強制規則啟動。大幅降低部位或全出。';
+  }
 
   // D. 籌碼主力 自動判斷（逐日趨勢分析）
   var autoChip = 'unknown'; var chipEv = [];
@@ -785,18 +791,6 @@ if (autoPrice === 'broken') {
     autoChip = 'unknown';
     chipEv.push('未填入三大法人數據，不計入評分');
   }
-
-var scoreA = autoPrice === 'unknown' ? null : sScore(autoPrice);
-  var scoreB = autoVol   === 'unknown' ? null : sScore(autoVol);
-  var scoreC = autoMom   === 'unknown' ? null : sScore(autoMom);
-  var scoreD = autoChip  === 'unknown' ? null : sScore(autoChip);
-
-  var tw = 0, ts2 = 0;
-  if (scoreA !== null) { ts2 += scoreA * 40; tw += 40; }
-  if (scoreB !== null) { ts2 += scoreB * 25; tw += 25; }
-  if (scoreC !== null) { ts2 += scoreC * 20; tw += 20; }
-  if (scoreD !== null) { ts2 += scoreD * 15; tw += 15; }
-  var structScore = tw > 0 ? Math.round(ts2 / tw) : 50;
 
   // 籌碼趨勢標籤（用於顯示）
   var chipTrendDisplay = {
