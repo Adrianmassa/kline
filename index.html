@@ -675,8 +675,30 @@ function analyze(sym, tf, pr, hi, lo, cost, ma5, ma10, ma20, rsi5, rsi10, rsiPre
     rules.push({rule:'R4', level:'warn', text:'結構破壞確認，R4強制規則：大幅降低部位或全出'});
   }
 
-  function sScore(v) { return v === 'good' ? 100 : v === 'weak' ? 40 : v === 'broken' ? 0 : 50; }
-  var sLabel = {good:'良好', weak:'轉弱', broken:'破壞', unknown:'數據不足'};
+// === 洗盤 vs 出貨辨識 ===
+var isAboveMA = (!isNaN(ma10) && pr > ma10);
+var isVolumeShrink = (!isNaN(vol) && !isNaN(volPrev) && vol < volPrev * 0.8);
+var noBreakSupport = (!isNaN(swingL1) && pr >= swingL1);
+
+// 判斷 weak 是否為洗盤
+if (autoPrice === 'weak' && isAboveMA && isVolumeShrink && noBreakSupport) {
+  autoPrice = 'weak_pullback';
+}
+
+function sScore(v) {
+  return v === 'good' ? 100 :
+         v === 'weak_pullback' ? 60 :
+         v === 'weak' ? 40 :
+         v === 'broken' ? 0 : 50;
+}
+
+var sLabel = {
+  good:'良好',
+  weak_pullback:'洗盤整理',
+  weak:'轉弱',
+  broken:'破壞',
+  unknown:'數據不足'
+};
 
   var scoreA = autoPrice === 'unknown' ? null : sScore(autoPrice);
   var scoreB = autoVol   === 'unknown' ? null : sScore(autoVol);
@@ -868,7 +890,7 @@ if (structClass === 'weak') {
 if (structClass === 'broken') {
   bs *= 0.45;
   bs = Math.min(bs, 35);
-  bs = Math.max(bs, -35);
+- [ ]   bs = Math.max(bs, -35);
 }
 
 bs = 100 * Math.tanh(bs / 55);
@@ -952,11 +974,10 @@ bs = 100 * Math.tanh(bs / 55);
     } else if (inUptrend && pr > (isNaN(ma20)?pr:ma20)) {
       if (nearBreakout) { stageState = '突破段'; actionHint = 'add_on_breakout'; }
       else { stageState = '初升段'; actionHint = 'hold'; }
-    } else if (autoPrice === 'weak') {
-      stageState = '高檔整理/轉弱'; actionHint = 'observe';
-    } else {
-      stageState = '盤整中'; actionHint = 'observe';
-    }
+    } else if (autoPrice === 'weak' || autoPrice === 'weak_pullback') {
+  stageState = autoPrice === 'weak_pullback' ? '洗盤整理' : '高檔整理/轉弱';
+  actionHint = 'observe';
+}
   } else {
     if (bias === 'BULL') { stageState = '偏多'; actionHint = 'hold'; }
     else if (bias === 'BEAR') { stageState = '偏空'; actionHint = 'reduce'; }
