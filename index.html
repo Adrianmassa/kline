@@ -1077,7 +1077,14 @@ function renderResult(d) {
   var ah = d.actionHint || 'observe';
 
   var mainCard = mkEl('div','');
-  mainCard.style.cssText = 'margin:0 14px 10px;border-radius:14px;padding:16px;background:' + (aBg[ah]||'rgba(245,158,11,0.08)') + ';border:2px solid ' + (aBorder[ah]||'rgba(245,158,11,0.3)') + ';display:flex;align-items:center;gap:12px';
+  mainCard.style.margin = '0 14px 10px';
+  mainCard.style.borderRadius = '14px';
+  mainCard.style.padding = '16px';
+  mainCard.style.background = aBg[ah] || 'rgba(245,158,11,0.08)';
+  mainCard.style.border = '2px solid ' + (aBorder[ah] || 'rgba(245,158,11,0.3)');
+  mainCard.style.display = 'flex';
+  mainCard.style.alignItems = 'center';
+  mainCard.style.gap = '12px';
   var mainLeft = mkEl('div',''); mainLeft.style.flex='1';
   var mainLbl = mkEl('div','');
   mainLbl.style.cssText='font-size:10px;color:var(--muted);font-family:DM Mono,monospace;letter-spacing:1px;margin-bottom:4px';
@@ -1130,14 +1137,25 @@ function renderResult(d) {
   var bsIsPos = bsVal >= 0;
 
   var auxCard = mkEl('div','');
-  auxCard.style.cssText='margin:0 14px 10px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 14px';
+  auxCard.style.margin = '0 14px 10px';
+  auxCard.style.background = 'var(--card)';
+  auxCard.style.border = '1px solid var(--border)';
+  auxCard.style.borderRadius = '10px';
+  auxCard.style.padding = '10px 14px';
 
   // Row 1: label + badge + score
   var auxTop = mkEl('div',''); auxTop.style.cssText='display:flex;align-items:center;gap:8px;margin-bottom:8px';
   var auxLbl2 = mkEl('div',''); auxLbl2.style.cssText='font-size:9px;color:var(--muted);font-family:DM Mono,monospace;flex:1';
   auxLbl2.textContent='多空強度（方向偏多偏空，不代表可追價）';
   var auxBadge2 = mkEl('div','');
-  auxBadge2.style.cssText='padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;font-family:DM Mono,monospace;background:rgba(0,0,0,0.2);border:1px solid '+bsColor+';color:'+bsColor;
+  auxBadge2.style.padding = '2px 8px';
+  auxBadge2.style.borderRadius = '20px';
+  auxBadge2.style.fontSize = '11px';
+  auxBadge2.style.fontWeight = '700';
+  auxBadge2.style.fontFamily = 'DM Mono,monospace';
+  auxBadge2.style.background = 'rgba(0,0,0,0.2)';
+  auxBadge2.style.border = '1px solid ' + bsColor;
+  auxBadge2.style.color = bsColor;
   auxBadge2.textContent = d.biasLabel || (bsVal>=25?'偏多':bsVal<=-25?'偏空':'中性');
   auxTop.appendChild(auxLbl2); auxTop.appendChild(auxBadge2);
   auxCard.appendChild(auxTop);
