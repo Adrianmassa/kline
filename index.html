@@ -1055,7 +1055,7 @@ function renderResult(d) {
   var btxt = d.bias==='BULL'?'📈 看多':d.bias==='BEAR'?'📉 看空':'➡️ 中立';
   var bc2 = d.bias==='BULL'?'var(--green)':d.bias==='BEAR'?'var(--red)':'var(--gold)';
   var modeC = d.mode==='A'?'var(--green)':d.mode==='B'?'var(--gold)':'var(--muted)';
-  var modeT = d.mode==='A'?'🎯 A模式':d.mode==='B'?'🛡️ B模式':'— 未定';
+  var modeT = d.mode==='A'?'🎯 A模式':d.mode==='B'?'🛡️ B模式':'\u2014 未定';
 
   // Header
   // ── Header ──
