@@ -818,11 +818,28 @@ function analyze(sym, tf, pr, hi, lo, cost, ma5, ma10, ma20, rsi5, rsi10, rsiPre
   // 多空強度：-100 ~ +100（0為中性）
   var bs = 0;
   bs += trendScore(majT)*12 + trendScore(midT)*9 + trendScore(curT)*14;
-  if (hma) { if (ma5>ma10) bs+=6; if (ma10>ma20) bs+=6; if (pr>ma20) bs+=6; }
+
+// 均線「結構」判斷（只算一次）
+if (hma) {
+  if (ma5 > ma10 && ma10 > ma20) {
+    bs += 10;
+  } else if (ma5 > ma10) {
+    bs += 5;
+  } else if (ma5 < ma10 && ma10 < ma20) {
+    bs -= 10;
+  }
+}
+
+// 價格「位置」判斷（獨立）
+if (!isNaN(ma20)) {
+  if (pr > ma20) bs += 4;
+  else bs -= 4;
+}
+
   if (!isNaN(rsi5)) { if (rsi5>60) bs+=8; else if (rsi5<40) bs-=8; }
   if (!isNaN(dif)) { if (dif>0) bs+=5; if (dif>macd9) bs+=5; }
   bs += momScore * 4;
-  bs = Math.max(-100, Math.min(100, bs));
+  bs = 100 * Math.tanh(bs / 50);
   var bias = (bs >= 25) ? 'BULL' : (bs <= -25) ? 'BEAR' : 'NEUTRAL';
   var biasLabel, biasLabelColor;
   if (bs >= 60)                 { biasLabel = '強多'; biasLabelColor = '#22c55e'; }
