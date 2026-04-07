@@ -198,7 +198,17 @@ select{width:118px;text-align:center;}
 </div>
 
 <div class="page" id="page-history">
-  <div class="section" style="padding-bottom:8px"><div class="section-title">&#x5206;&#x6790;&#x8A18;&#x9304;</div></div>
+  <div class="section" style="padding-bottom:8px;display:flex;align-items:center;gap:8px">
+    <div class="section-title" style="flex:1">&#x5206;&#x6790;&#x8A18;&#x9304;</div>
+    <button id="deleteToggleBtn" onclick="toggleDeleteMode()" style="background:var(--card2);border:1px solid var(--border);color:var(--muted);font-size:11px;padding:4px 10px;border-radius:8px;cursor:pointer">&#x9078;&#x64C7;&#x522A;&#x9664;</button>
+  </div>
+  <div id="deleteBanner" style="display:none;margin:0 14px 8px;background:#1f0808;border:1px solid var(--red);border-radius:10px;padding:10px 14px">
+    <div style="display:flex;align-items:center;gap:8px">
+      <div style="flex:1;font-size:12px;color:var(--text)" id="deleteCount">0 &#x7B46;&#x5DF2;&#x9078;</div>
+      <button onclick="deleteSelected()" style="background:var(--red);color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer">&#x522A;&#x9664;&#x9078;&#x4E2D;</button>
+      <button onclick="deleteAll()" style="background:var(--card2);color:var(--red);border:1px solid var(--red);border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer">&#x5168;&#x90E8;&#x522A;&#x9664;</button>
+    </div>
+  </div>
   <div id="historyList" style="padding:0 14px"></div>
 </div>
 
