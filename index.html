@@ -678,18 +678,6 @@ function analyze(sym, tf, pr, hi, lo, cost, ma5, ma10, ma20, rsi5, rsi10, rsiPre
   function sScore(v) { return v === 'good' ? 100 : v === 'weak' ? 40 : v === 'broken' ? 0 : 50; }
   var sLabel = {good:'良好', weak:'轉弱', broken:'破壞', unknown:'數據不足'};
 
-  var scoreA = autoPrice === 'unknown' ? null : sScore(autoPrice);
-  var scoreB = autoVol   === 'unknown' ? null : sScore(autoVol);
-  var scoreC = autoMom   === 'unknown' ? null : sScore(autoMom);
-  var scoreD = autoChip  === 'unknown' ? null : sScore(autoChip);
-
-  var tw = 0, ts2 = 0;
-  if (scoreA !== null) { ts2 += scoreA * 40; tw += 40; }
-  if (scoreB !== null) { ts2 += scoreB * 25; tw += 25; }
-  if (scoreC !== null) { ts2 += scoreC * 20; tw += 20; }
-  if (scoreD !== null) { ts2 += scoreD * 15; tw += 15; }
-  var structScore = tw > 0 ? Math.round(ts2 / tw) : 50;
-
   var structClass, structTitle, structDesc;
   if (autoPrice === 'broken') {
     structClass = 'broken'; structTitle = '🚨 結構破壞 BROKEN';
@@ -792,6 +780,18 @@ function analyze(sym, tf, pr, hi, lo, cost, ma5, ma10, ma20, rsi5, rsi10, rsiPre
     chipEv.push('未填入三大法人數據，不計入評分');
   }
 
+var scoreA = autoPrice === 'unknown' ? null : sScore(autoPrice);
+  var scoreB = autoVol   === 'unknown' ? null : sScore(autoVol);
+  var scoreC = autoMom   === 'unknown' ? null : sScore(autoMom);
+  var scoreD = autoChip  === 'unknown' ? null : sScore(autoChip);
+
+  var tw = 0, ts2 = 0;
+  if (scoreA !== null) { ts2 += scoreA * 40; tw += 40; }
+  if (scoreB !== null) { ts2 += scoreB * 25; tw += 25; }
+  if (scoreC !== null) { ts2 += scoreC * 20; tw += 20; }
+  if (scoreD !== null) { ts2 += scoreD * 15; tw += 15; }
+  var structScore = tw > 0 ? Math.round(ts2 / tw) : 50;
+
   // 籌碼趨勢標籤（用於顯示）
   var chipTrendDisplay = {
     strong_buy:    '連續買超',
@@ -804,8 +804,6 @@ function analyze(sym, tf, pr, hi, lo, cost, ma5, ma10, ma20, rsi5, rsi10, rsiPre
     neutral:       '數據不足'
   };
   var chipLabel = autoChip === 'unknown' ? '未填入' : (chipTrendDisplay[chipTrend] || sLabel[autoChip]);
-
-  var chipLabel = sLabel[autoChip] || autoChip;
 
   var structDetails = [
     {dim:'A. 價格結構', val:autoPrice, score:scoreA, weight:40, label:sLabel[autoPrice]||autoPrice, ev:priceEv},
