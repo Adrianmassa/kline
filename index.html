@@ -67,53 +67,6 @@ select{width:118px;text-align:center;}
 .score-val{font-size:12px;font-family:'DM Mono',monospace;}
 .bar-track{height:6px;background:var(--card2);border-radius:3px;overflow:hidden;}
 .bar-fill{height:100%;border-radius:3px;transition:width 1s cubic-bezier(.4,0,.2,1);}
-
-.bias-center-wrap{
-  position:relative;
-  height:10px;
-  background:var(--card2);
-  border-radius:999px;
-  overflow:hidden;
-}
-.bias-center-line{
-  position:absolute;
-  left:50%;
-  top:0;
-  bottom:0;
-  width:1px;
-  background:rgba(255,255,255,0.25);
-  z-index:2;
-}
-.bias-half{
-  position:absolute;
-  top:0;
-  bottom:0;
-  width:50%;
-}
-.bias-left{
-  left:0;
-}
-.bias-right{
-  right:0;
-}
-.bias-fill-left,
-.bias-fill-right{
-  position:absolute;
-  top:0;
-  bottom:0;
-  width:0%;
-  transition:width 0.8s cubic-bezier(.4,0,.2,1);
-}
-.bias-fill-left{
-  right:0;
-  background:var(--red);
-  border-radius:999px 0 0 999px;
-}
-.bias-fill-right{
-  left:0;
-  background:var(--green);
-  border-radius:0 999px 999px 0;
-}
 .struct-verdict{margin:0 14px 10px;border-radius:14px;padding:16px;border:2px solid;}
 .struct-verdict.good{background:rgba(34,197,94,0.07);border-color:var(--green);}
 .struct-verdict.weak{background:rgba(245,158,11,0.07);border-color:var(--gold);}
@@ -717,6 +670,11 @@ function analyze(sym, tf, pr, hi, lo, cost, ma5, ma10, ma20, rsi5, rsi10, rsiPre
   }
   if (autoMom === 'good' && momEv.length === 0) { autoMom = 'unknown'; momEv.push('未填MACD/RSI'); }
 
+  // R4 結構破壞自動觸發
+  if (autoPrice === 'broken') {
+    rules.push({rule:'R4', level:'warn', text:'結構破壞確認，R4強制規則：大幅降低部位或全出'});
+  }
+
   function sScore(v) { return v === 'good' ? 100 : v === 'weak' ? 40 : v === 'broken' ? 0 : 50; }
   var sLabel = {good:'良好', weak:'轉弱', broken:'破壞', unknown:'數據不足'};
 
@@ -857,56 +815,21 @@ function analyze(sym, tf, pr, hi, lo, cost, ma5, ma10, ma20, rsi5, rsi10, rsiPre
   ];
 
   // Bias score
-
-var bs = 0;
-bs += trendScore(majT) * 8;
-bs += trendScore(midT) * 6;
-bs += trendScore(curT) * 10;
-
-if (hma) {
-  if (ma5 > ma10) bs += 4;
-  else if (ma5 < ma10) bs -= 4;
-
-  if (ma10 > ma20) bs += 4;
-  else if (ma10 < ma20) bs -= 4;
-
-  if (pr > ma20) bs += 5;
-  else if (pr < ma20) bs -= 5;
-}
-
-if (!isNaN(rsi5)) {
-  if (rsi5 >= 60 && rsi5 < 75) bs += 6;
-  else if (rsi5 >= 75) bs += 3;
-  else if (rsi5 <= 40 && rsi5 > 25) bs -= 6;
-  else if (rsi5 <= 25) bs -= 3;
-}
-
-if (!isNaN(dif) && !isNaN(macd9)) {
-  if (dif > 0) bs += 4;
-  else if (dif < 0) bs -= 4;
-
-  if (dif > macd9) bs += 4;
-  else if (dif < macd9) bs -= 4;
-}
-
-if (!isNaN(momScore)) {
-  bs += Math.max(-10, Math.min(10, momScore * 2));
-}
-
-if (!isNaN(pr) && !isNaN(hi) && !isNaN(lo) && hi > lo) {
-  var pos = (pr - lo) / (hi - lo);
-
-  if (pos >= 0.85) bs -= 10;
-  else if (pos >= 0.70) bs -= 6;
-  else if (pos <= 0.15) bs += 6;
-}
-
-bs = Math.max(-90, Math.min(90, Math.round(bs)));
-
-var bias =
-  bs >= 15 ? 'BULL' :
-  bs <= -15 ? 'BEAR' :
-  'NEUTRAL';
+  // 多空強度：-100 ~ +100（0為中性）
+  var bs = 0;
+  bs += trendScore(majT)*12 + trendScore(midT)*9 + trendScore(curT)*14;
+  if (hma) { if (ma5>ma10) bs+=6; if (ma10>ma20) bs+=6; if (pr>ma20) bs+=6; }
+  if (!isNaN(rsi5)) { if (rsi5>60) bs+=8; else if (rsi5<40) bs-=8; }
+  if (!isNaN(dif)) { if (dif>0) bs+=5; if (dif>macd9) bs+=5; }
+  bs += momScore * 4;
+  bs = Math.max(-100, Math.min(100, bs));
+  var bias = (bs >= 25) ? 'BULL' : (bs <= -25) ? 'BEAR' : 'NEUTRAL';
+  var biasLabel, biasLabelColor;
+  if (bs >= 60)                 { biasLabel = '強多'; biasLabelColor = '#22c55e'; }
+  else if (bs >= 25)            { biasLabel = '偏多'; biasLabelColor = '#86efac'; }
+  else if (bs > -25 && bs < 25) { biasLabel = '中性'; biasLabelColor = '#f59e0b'; }
+  else if (bs <= -60)           { biasLabel = '強空'; biasLabelColor = '#ef4444'; }
+  else                          { biasLabel = '偏空'; biasLabelColor = '#fca5a5'; }
 
   // Patterns
   var pat = [];
@@ -947,7 +870,7 @@ var bias =
     sig.push({text:'短線偏多，' + (mode === 'A' ? '可建試單30%' : '（B模式：僅最強訊號才試單）'), type:'ok'});
     if (nearR)  sig.push({text:'第一目標（最近壓力）：' + nearR.price + '（' + nearR.label + '）', type:''});
     if (nearR2) sig.push({text:'第二目標：' + nearR2.price + '（' + nearR2.label + '）', type:''});
-    if (nearS)  sig.push({text:'止損：跌破 ' + nearS.price + ' 出場（' + nearS.label + '）', type:'caution'});
+    if (nearS)  sig.push({text:'短線止損：跌破 ' + nearS.price + ' 出場（' + nearS.label + '）', type:'caution'});
   } else if (bias === 'BEAR') {
     sig.push({text:'整體偏空，不宜做多，等底部確認', type:'warn'});
     if (nearR) sig.push({text:'反彈壓力：' + nearR.price + '（' + nearR.label + '），可減碼位', type:'caution'});
@@ -962,7 +885,7 @@ var bias =
   if (!isNaN(rsi5) && rsi5 >= 70) risk.push({text:'RSI超買，避免追高', type:'warn'});
   if (majT === 'down') risk.push({text:'大週期向下，反彈不宜重倉', type:'warn'});
   if (mode === 'B') risk.push({text:'B模式禁止攤平虧損股', type:'caution'});
-  risk.push({text:'嚴守止損' + lo + '，跌破立即出場（R4）', type:'warn'});
+  risk.push({text:'結構止損：跌破 ' + lo + ' 立即出場（R4 結構破壞）', type:'warn'});
   risk.push({text:'本分析為技術參考，不構成投資建議', type:''});
 
   // 階段判斷 stage_state
@@ -1001,7 +924,7 @@ var bias =
   var nearSText = nearS ? ('，最近支撐' + nearS.price + '（' + nearS.label + '）') : '';
   var sum = sym + '（' + tflabel(tf) + '）現價' + pr + '，階段判斷：' + stageState + '，' + actionWord + modeWord + '。'
     + structWord + '（結構分' + structScore + '/100）' + nearRText + nearSText + '。'
-    + '多空方向' + (bias==='BULL'?'偏多':bias==='BEAR'?'偏空':'中立') + '（強度' + (bs > 0 ? '+' : '') + bs.toFixed(0) + '，0為中軸，僅供方向參考）。';
+    + '多空方向' + (bias==='BULL'?'偏多':bias==='BEAR'?'偏空':'中立') + '（強度' + bs.toFixed(0) + '/100，僅供方向參考）。';
 
   // 技術分析總分（綜合所有指標）
   var techScore = Math.round(
@@ -1018,7 +941,7 @@ var bias =
   else                      { techGrade = '偏弱'; techGradeColor = 'var(--red)'; }
 
   return {
-    sym:sym, tf:tf, pr:pr, hi:hi, lo:lo, bias:bias, bs:bs,
+    sym:sym, tf:tf, pr:pr, hi:hi, lo:lo, bias:bias, bs:bs, biasLabel:biasLabel, biasLabelColor:biasLabelColor,
     fib:fib, sr:sr, maA:maA, rsiA:rsiA, macdA:macdA, momA:momA, volA:volA,
     pat:pat, wave:wave, sig:sig, risk:risk, rules:rules, sum:sum,
     majT:majT, midT:midT, curT:curT, mode:mode, trendNote:trendNote,
@@ -1144,51 +1067,49 @@ function renderResult(d) {
   scoresRow.appendChild(mkScoreCard('技術分析總分', d.techScore||50, d.techGradeColor||'var(--gold)', d.techGrade||'中性'));
   wrap.appendChild(scoresRow);
 
-  // ── 輔助小欄：多空強度（方向參考）──
+  // ── 輔助小欄：多空強度（-100 ~ +100 雙向bar）──
+  var bsVal = d.bs || 0;
+  var bsColor = bsVal >= 25 ? '#22c55e' : bsVal <= -25 ? '#ef4444' : '#f59e0b';
+  var bsPct = Math.abs(bsVal); // 0~100
+  var bsIsPos = bsVal >= 0;
+
   var auxCard = mkEl('div','');
-  auxCard.style.cssText='margin:0 14px 10px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:10px';
-  var auxLeft2 = mkEl('div',''); auxLeft2.style.flex='1';
-  var auxLbl2 = mkEl('div',''); auxLbl2.style.cssText='font-size:9px;color:var(--muted);font-family:DM Mono,monospace;margin-bottom:3px';
+  auxCard.style.cssText='margin:0 14px 10px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 14px';
+
+  // Row 1: label + badge + score
+  var auxTop = mkEl('div',''); auxTop.style.cssText='display:flex;align-items:center;gap:8px;margin-bottom:8px';
+  var auxLbl2 = mkEl('div',''); auxLbl2.style.cssText='font-size:9px;color:var(--muted);font-family:DM Mono,monospace;flex:1';
   auxLbl2.textContent='多空強度（方向偏多偏空，不代表可追價）';
-  var auxRow2 = mkEl('div',''); auxRow2.style.cssText='display:flex;align-items:center;gap:8px';
-  var auxBadge2 = mkEl('div','bias-badge '+bc); auxBadge2.textContent=btxt;
-  var auxScore2 = mkEl('div',''); auxScore2.style.cssText='font-size:13px;font-family:DM Mono,monospace;color:'+bc2;
- 
-auxScore2.textContent = (d.bs > 0 ? '+' : '') + d.bs.toFixed(0);
-  auxRow2.appendChild(auxBadge2); auxRow2.appendChild(auxScore2);
-  auxLeft2.appendChild(auxLbl2); auxLeft2.appendChild(auxRow2);
- var biasText = (d.bs > 0 ? '+' : '') + d.bs;
+  var auxBadge2 = mkEl('div','');
+  auxBadge2.style.cssText='padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;font-family:DM Mono,monospace;background:rgba(0,0,0,0.2);border:1px solid '+bsColor+';color:'+bsColor;
+  auxBadge2.textContent = d.biasLabel || (bsVal>=25?'偏多':bsVal<=-25?'偏空':'中性');
+  auxTop.appendChild(auxLbl2); auxTop.appendChild(auxBadge2);
+  auxCard.appendChild(auxTop);
 
-var auxScore2 = mkEl('div','');
-auxScore2.style.cssText='font-size:13px;font-family:DM Mono,monospace;color:'+bc2;
-auxScore2.textContent = biasText;
+  // Row 2: bidirectional bar
+  var barWrap = mkEl('div',''); barWrap.style.cssText='position:relative;height:14px;background:var(--card2);border-radius:7px;overflow:hidden';
+  // center divider
+  var centerLine = mkEl('div',''); centerLine.style.cssText='position:absolute;left:50%;top:0;bottom:0;width:2px;background:#000;transform:translateX(-50%);z-index:2';
+  barWrap.appendChild(centerLine);
+  // fill
+  var fillEl = mkEl('div',''); fillEl.id='barFill';
+  if (bsIsPos) {
+    fillEl.style.cssText='position:absolute;left:50%;top:0;bottom:0;border-radius:0 7px 7px 0;background:'+bsColor+';width:0%;transition:width 1s cubic-bezier(.4,0,.2,1)';
+    fillEl.setAttribute('data-target', (bsPct/2)+'%');
+  } else {
+    fillEl.style.cssText='position:absolute;right:50%;top:0;bottom:0;border-radius:7px 0 0 7px;background:'+bsColor+';width:0%;transition:width 1s cubic-bezier(.4,0,.2,1)';
+    fillEl.setAttribute('data-target', (bsPct/2)+'%');
+  }
+  barWrap.appendChild(fillEl);
+  auxCard.appendChild(barWrap);
 
-var auxBarWrap = mkEl('div','');
-auxBarWrap.style.cssText='width:110px';
-
-var biasWrap = mkEl('div','bias-center-wrap');
-
-var biasLine = mkEl('div','bias-center-line');
-
-var leftHalf = mkEl('div','bias-half bias-left');
-var rightHalf = mkEl('div','bias-half bias-right');
-
-var leftFill = mkEl('div','bias-fill-left');
-leftFill.id = 'biasFillLeft';
-
-var rightFill = mkEl('div','bias-fill-right');
-rightFill.id = 'biasFillRight';
-
-leftHalf.appendChild(leftFill);
-rightHalf.appendChild(rightFill);
-
-biasWrap.appendChild(leftHalf);
-biasWrap.appendChild(rightHalf);
-biasWrap.appendChild(biasLine);
-
-auxBarWrap.appendChild(biasWrap);
-auxCard.appendChild(auxLeft2);
-auxCard.appendChild(auxBarWrap);
+  // Row 3: scale labels
+  var scaleRow = mkEl('div',''); scaleRow.style.cssText='display:flex;justify-content:space-between;margin-top:3px';
+  var sL = mkEl('div',''); sL.style.cssText='font-size:9px;color:var(--muted);font-family:DM Mono,monospace'; sL.textContent='-100';
+  var sM = mkEl('div',''); sM.style.cssText='font-size:9px;color:var(--muted);font-family:DM Mono,monospace;text-align:center'; sM.textContent='0  |  ' + bsVal;
+  var sR = mkEl('div',''); sR.style.cssText='font-size:9px;color:var(--muted);font-family:DM Mono,monospace'; sR.textContent='+100';
+  scaleRow.appendChild(sL); scaleRow.appendChild(sM); scaleRow.appendChild(sR);
+  auxCard.appendChild(scaleRow);
   wrap.appendChild(auxCard);
   // Structure verdict
   var svcColor = d.structClass==='good'?'var(--green)':d.structClass==='weak'?'var(--gold)':'var(--red)';
@@ -1351,24 +1272,13 @@ auxCard.appendChild(auxBarWrap);
   wrap.appendChild(ts3);
 
   el.appendChild(wrap);
-
-setTimeout(function() {
-  var left = document.getElementById('biasFillLeft');
-  var right = document.getElementById('biasFillRight');
-
- var maxAbs = 90; // 你的系統最大值
-var absPct = Math.min(100, Math.abs(d.bs) / maxAbs * 100);
-
-auxFill2.style.cssText =
-  'position:absolute;top:0;bottom:0;width:' + absPct + '%;background:' + bc2 + ';' +
-  (d.bs >= 0
-    ? 'left:50%;border-radius:0 999px 999px 0;'
-    : 'right:50%;border-radius:999px 0 0 999px;');
-
-  if (left) left.style.width = d.bs < 0 ? absPct + '%' : '0%';
-  if (right) right.style.width = d.bs > 0 ? absPct + '%' : '0%';
-}, 100);
-
+  setTimeout(function() {
+    var f = document.getElementById('barFill');
+    if (f) {
+      var target = f.getAttribute('data-target');
+      if (target) f.style.width = target;
+    }
+  }, 100);
 }
 
 function saveHistory(r) {
