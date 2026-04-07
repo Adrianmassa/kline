@@ -1072,8 +1072,8 @@ function renderResult(d) {
   var aIcon  = {hold:'OK', observe:'observe', reduce:'reduce', add_on_breakout:'breakout'};
   var aEmoji = {hold:'OK', observe:'observe', reduce:'reduce', add_on_breakout:'rocket'};
   var aIconMap = {hold:'✅', observe:'👁', reduce:'⚠️', add_on_breakout:'🚀'};
-  var aBg = {hold:'rgba(34,197,94,0.08)', observe:'rgba(245,158,11,0.08)', reduce:'rgba(239,68,68,0.08)', add_on_breakout:'rgba(56,189,248,0.08)'};
-  var aBorder = {hold:'rgba(34,197,94,0.3)', observe:'rgba(245,158,11,0.3)', reduce:'rgba(239,68,68,0.3)', add_on_breakout:'rgba(56,189,248,0.3)'};
+  var aBg = {hold:'#0d2318', observe:'#2a1f05', reduce:'#2a0808', add_on_breakout:'#051e2a'};
+  var aBorder = {hold:'#22c55e', observe:'#f59e0b', reduce:'#ef4444', add_on_breakout:'#38bdf8'};
   var ah = d.actionHint || 'observe';
 
   var mainCard = mkEl('div','');
@@ -1081,7 +1081,9 @@ function renderResult(d) {
   mainCard.style.borderRadius = '14px';
   mainCard.style.padding = '16px';
   mainCard.style.background = aBg[ah] || 'rgba(245,158,11,0.08)';
-  mainCard.style.border = '2px solid ' + (aBorder[ah] || 'rgba(245,158,11,0.3)');
+  mainCard.style.borderWidth = '2px';
+  mainCard.style.borderStyle = 'solid';
+  mainCard.style.borderColor = aBorder[ah] || '#f59e0b';
   mainCard.style.display = 'flex';
   mainCard.style.alignItems = 'center';
   mainCard.style.gap = '12px';
